@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leo Mejillano Salon - Customer Portal</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            luxury: {
+              50: '#F4FBFA', 100: '#E5F2F0', 200: '#C7E0DD', 500: '#006D6F',
+              600: '#006D6F', 700: '#06464A', 800: '#06464A', 900: '#06464A', 950: '#FFF8EE',
+            },
+            gold: {
+              100: '#fef08a', 400: '#facc15', 500: '#eab308', 600: '#ca8a04',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    [x-cloak] { display: none !important; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #FFF8EE; }
+    ::-webkit-scrollbar-thumb { background: #006D6F; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #06464A; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .stagger-item { animation: fadeUp .45s cubic-bezier(.16,1,.3,1) both; }
+
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    .skeleton { background: linear-gradient(90deg, #FFF8EE 25%, #E8DCC8 37%, #FFF8EE 63%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; }
+
+    @keyframes gentlePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+    .pulse-badge { animation: gentlePulse 1.6s ease-in-out infinite; }
+
+    @keyframes topbarShine { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+    .topbar-shine { background-size: 200% 100%; animation: topbarShine 7s linear infinite; }
+
+    .card-lift { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+    .card-lift:hover { transform: translateY(-3px); box-shadow: 0 12px 24px -8px rgba(0, 109, 111, 0.35); }
+  </style>
+  <link rel="stylesheet" href="../../frontend/customer/customer-theme.css?v=20261104-notif2">
+  <script src="../../function/customer/theme-config.js"></script>
+  <link rel="stylesheet" href="../../frontend/shared/responsive-base.css?v=20261103b" />
+  <link rel="stylesheet" href="../../frontend/shared/portal-colors.css?v=20261103-signout-cream" />
+  <script src="../../function/shared/toast.js"></script>
+  <script src="../../function/shared/portal-presentation.js"></script>
+  <!-- Clean theme: loaded last so it overrides older theme colours. -->
+  <link rel="stylesheet" href="../../frontend/shared/clean-theme.css?v=20261104-notif4">
+  <!-- Customer portal shell (sidebar, header, bottom nav); loaded after the shared themes. -->
+  <link rel="stylesheet" href="../../frontend/customer/customer-portal.css?v=20261110">
+</head>
+<body data-customer-page="dashboard" data-page-title="Dashboard" class="salon-portal bg-luxury-950 text-slate-100 font-sans min-h-screen antialiased selection:bg-luxury-500 selection:text-white"
+      x-data="customerApp()" x-init="init()" x-cloak>
+
+
+  <div class="flex h-screen overflow-hidden flex-col md:flex-row">
+
+    <div data-customer-shell="sidebar"></div>
+
+    <main class="flex-1 flex flex-col bg-slate-950 overflow-y-auto">
+
+      <div data-customer-shell="header"></div>
+
+      <div x-show="isBooting" class="p-6 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="h-28 rounded-2xl skeleton"></div>
+          <div class="h-28 rounded-2xl skeleton"></div>
+        </div>
+        <div class="h-64 rounded-2xl skeleton"></div>
+      </div>
+
+      <div x-show="!isBooting" x-transition:enter="transition ease-out duration-500" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+
+        <div class="cp-page">
+          <!-- Welcome -->
+          <div class="cp-intro">
+            <div class="cp-intro-copy">
+              <span class="cp-eyebrow">YOUR BEAUTY SPACE</span>
+              <h1>Welcome back, <em x-text="customerFirstName()"></em> <span class="cp-flourish" aria-hidden="true">&#10035;</span></h1>
+              <p>A lovely day for a little time just for you.</p>
+            </div>
+            <span class="cp-chip"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg><span x-text="todayLabel()"></span></span>
+          </div>
+
+          <!-- Hero -->
+          <section class="cp-hero" aria-label="Book your next visit">
+            <div class="cp-hero-content">
+              <span class="cp-hero-kicker">THE LEO MEJILLANO EXPERIENCE</span>
+              <h2>Beautiful moments<br><em>begin here.</em></h2>
+              <p>Your favorite beauty services, thoughtful care, and time to feel like yourself again.</p>
+              <div class="cp-hero-actions">
+                <a href="services-promos.html?book=1" class="cp-btn cp-btn-light">Book an Appointment <svg class="cp-icon-sm" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
+                <a href="services-promos.html" class="cp-btn cp-btn-glass">Explore services</a>
+              </div>
+            </div>
+          </section>
+
+          <!-- Quick links, so pages that are not in the phone bottom bar stay one tap away. -->
+          <nav class="cp-quick-grid" aria-label="Quick actions">
+            <a href="services-promos.html?book=1" class="cp-quick-card"><span class="cp-quick-icon is-leaf"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg></span><span class="cp-quick-copy"><strong>Book an Appointment</strong><small>Find your perfect time</small></span><svg class="cp-icon-sm" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
+            <a href="appointments.html?track=1" class="cp-quick-card"><span class="cp-quick-icon is-beige"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 5 5"/></svg></span><span class="cp-quick-copy"><strong>Track Booking</strong><small>Check your status</small></span><svg class="cp-icon-sm" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
+            <a href="reviews.html" class="cp-quick-card"><span class="cp-quick-icon is-blush"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.5 5.5a5.5 5.5 0 0 0-7.8 0L12 6.2l-.7-.7a5.5 5.5 0 0 0-7.8 7.8L12 22l8.5-8.7a5.5 5.5 0 0 0 0-7.8z"/></svg></span><span class="cp-quick-copy"><strong>My Feedback</strong><small>Rate a finished visit</small></span><svg class="cp-icon-sm" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
+            <a href="home-service.html" class="cp-quick-card"><span class="cp-quick-icon is-leaf"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg></span><span class="cp-quick-copy"><strong>Home Service</strong><small>We come to you</small></span><svg class="cp-icon-sm" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
+          </nav>
+
+          <div class="cp-content-grid">
+            <!-- Next appointment: soonest upcoming active booking (getNextAppointment in dashboard-appointments.js). -->
+            <section aria-labelledby="cp-next-title">
+              <div class="cp-section-heading">
+                <div><span class="cp-eyebrow">COMING UP</span><h2 id="cp-next-title">Your next appointment</h2></div>
+                <a href="appointments.html" class="cp-text-button">View all <svg class="cp-icon-sm" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
+              </div>
+              <template x-if="getNextAppointment()">
+                <article class="cp-card cp-upcoming" x-data="{ get next() { return getNextAppointment(); } }">
+                  <div class="cp-upcoming-top">
+                    <small x-text="'APPOINTMENT · ' + next.id"></small>
+                    <span :class="getStatusBadgeClass(next.status)" x-text="getCustomerStatusLabel(next.status)"></span>
+                  </div>
+                  <h3 class="cp-upcoming-service" x-text="next.serviceName"></h3>
+                  <div class="cp-upcoming-meta">
+                    <div><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg><span x-text="formatApptDateLong(next.date)"></span></div>
+                    <div><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></svg><span x-text="next.time"></span></div>
+                    <div><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><span x-text="next.branchName"></span></div>
+                    <div><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span x-text="next.staffName ? 'with ' + next.staffName : (next.durationMinutes ? next.durationMinutes + ' min' : 'Stylist to be assigned')"></span></div>
+                  </div>
+                  <div class="cp-upcoming-bottom">
+                    <div><small>BOOKING REFERENCE</small><strong x-text="next.id"></strong></div>
+                    <button type="button" class="cp-text-button" @click="openAppointmentDetails(next)">View details <svg class="cp-icon-sm" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+                  </div>
+                </article>
+              </template>
+              <template x-if="!getNextAppointment()">
+                <div class="cp-card cp-empty">
+                  <svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg>
+                  <h3>No upcoming appointment</h3>
+                  <p>Ready for a fresh look? Pick a branch and a time that suits you.</p>
+                  <a href="services-promos.html?book=1" class="cp-btn cp-btn-primary">Book an Appointment <svg class="cp-icon-sm" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
+                </div>
+              </template>
+            </section>
+
+            <section aria-labelledby="cp-made-title">
+              <div class="cp-section-heading"><div><span class="cp-eyebrow">DISCOVER &amp; ENJOY</span><h2 id="cp-made-title">Made for you</h2></div></div>
+              <div class="cp-feature-card">
+                <span class="cp-feature-art" aria-hidden="true">&#10042;</span>
+                <span class="cp-feature-tag">A LITTLE SELF-CARE</span>
+                <h3>Make room for<br>your glow.</h3>
+                <p>From a fresh cut to a relaxing nail session, your next favorite service is waiting.</p>
+                <p class="cp-feature-stat" x-text="Number(displayServiceCount) === 1 ? '1 completed service with us' : displayServiceCount + ' completed services with us'"></p>
+                <a href="services-promos.html" class="cp-text-button">Explore treatments <svg class="cp-icon-sm" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
+              </div>
+            </section>
+          </div>
+
+          <!-- Services you'll love: categories from the live catalogs. -->
+          <section x-show="serviceTeasers().length" aria-labelledby="cp-fav-title">
+            <div class="cp-section-heading cp-spaced">
+              <div><span class="cp-eyebrow">OUR FAVORITES</span><h2 id="cp-fav-title">Services you'll love</h2></div>
+              <a href="services-promos.html" class="cp-text-button">See all services <svg class="cp-icon-sm" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
+            </div>
+            <div class="cp-teasers">
+              <template x-for="(teaser, index) in serviceTeasers()" :key="teaser.name">
+                <a href="services-promos.html" class="cp-teaser">
+                  <span class="cp-teaser-icon"><template x-if="index % 4 === 0"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5z"/></svg></template><template x-if="index % 4 === 1"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.5 5.5a5.5 5.5 0 0 0-7.8 0L12 6.2l-.7-.7a5.5 5.5 0 0 0-7.8 7.8L12 22l8.5-8.7a5.5 5.5 0 0 0 0-7.8z"/></svg></template><template x-if="index % 4 === 2"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3L22 9.3l-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3L7 14.2 2 9.3l6.9-1z"/></svg></template><template x-if="index % 4 === 3"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></template></span>
+                  <strong x-text="teaser.name"></strong>
+                  <small x-text="teaser.detail"></small>
+                  <svg class="cp-icon-sm" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+                </a>
+              </template>
+            </div>
+          </section>
+
+          <!-- Shared loyalty card across all branches. -->
+          <section class="cp-card cp-loyalty" aria-labelledby="cp-loyalty-title">
+            <span class="cp-eyebrow">YOUR SALON REWARDS</span>
+            <h2 id="cp-loyalty-title">My Loyalty Card</h2>
+            <p class="cp-muted">Your stamp progress and the rewards you can earn.</p>
+            <div class="cp-loyalty-body">
+              <div class="cp-loyalty-head">
+                <div>
+                  <span class="cp-eyebrow cp-eyebrow-ink">LEO MEJILLANO SALON</span>
+                  <p class="cp-loyalty-count"><span x-text="customerProfile.loyaltyCard.stamps"></span><small> / 10 stamps collected</small></p>
+                  <p class="cp-muted" x-text="customerProfile.loyaltyCard.stamps >= 10 ? 'Card complete! A new card starts on your next visit.' : 'Complete a qualifying visit to earn a stamp.'"></p>
+                </div>
+                <span class="cp-loyalty-badge" aria-hidden="true"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3L22 9.3l-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3L7 14.2 2 9.3l6.9-1z"/></svg></span>
+              </div>
+              <div class="cp-progress" aria-hidden="true"><span :style="'width:' + Math.min(100, customerProfile.loyaltyCard.stamps * 10) + '%'"></span></div>
+              <div class="cp-stamps" role="list" aria-label="Loyalty card stamps">
+                <template x-for="stamp in 10" :key="stamp">
+                  <span role="listitem" class="cp-stamp" :class="{ 'is-earned': stamp <= customerProfile.loyaltyCard.stamps }" :aria-label="'Stamp ' + stamp + (stamp <= customerProfile.loyaltyCard.stamps ? ': earned' : ': not yet earned')" x-text="stamp <= customerProfile.loyaltyCard.stamps ? '✓' : stamp"></span>
+                </template>
+              </div>
+              <p class="cp-muted">Collect 1 stamp for every visit to a salon branch with a minimum spend of ₱500 on salon services.</p>
+              <div class="cp-rewards">
+                <div class="cp-reward"><span class="cp-eyebrow cp-eyebrow-gold">YOUR 5TH VISIT</span><h3>20% Discount</h3><p>Save 20% on your fifth eligible visit.</p><span class="cp-reward-pill" x-text="customerProfile.loyaltyCard.stamps >= 5 ? 'Reached' : (5 - customerProfile.loyaltyCard.stamps) + ' stamps to reach this reward'"></span></div>
+                <div class="cp-reward"><span class="cp-eyebrow cp-eyebrow-gold">YOUR 10TH VISIT</span><h3>FREE Treatment</h3><p>Receive a free eligible hair treatment on your tenth visit.</p><span class="cp-reward-pill" x-text="customerProfile.loyaltyCard.stamps >= 10 ? 'Reached' : (10 - customerProfile.loyaltyCard.stamps) + ' stamps to reach this reward'"></span></div>
+              </div>
+              <template x-for="reward in customerProfile.loyaltyCard.rewards" :key="reward.id">
+                <p class="cp-reward-available" x-text="reward.type === 'discount20' ? 'Available reward: 20% off salon services' : 'Available reward: Free eligible hair treatment'"></p>
+              </template>
+              <p class="cp-muted cp-small" x-show="customerProfile.loyaltyCard.completedCards" x-text="customerProfile.loyaltyCard.completedCards + ' completed loyalty card(s)'"></p>
+              <p class="cp-muted cp-small">These benefits reflect the salon's physical loyalty card. Redeem one reward per visit at any branch; free treatment rewards apply to eligible hair treatments only.</p>
+              <details class="cp-details">
+                <summary>View full mechanics</summary>
+                <ul>
+                  <li>Collect 1 stamp for each completed and fully paid visit with a minimum spend of ₱500 on salon services after discounts. Product purchases and tips are excluded.</li>
+                  <li>Your 5th stamp earns a 20% discount reward, and your 10th stamp earns a free eligible hair treatment reward. Rewards are available on a future visit.</li>
+                  <li>Redeem one reward per visit at any branch.</li>
+                  <li>After 10 stamps, a new card starts. Unused rewards remain available.</li>
+                </ul>
+              </details>
+              <div class="cp-loyalty-actions"><a href="services-promos.html?book=1" class="cp-btn cp-btn-secondary">Plan a visit <svg class="cp-icon-sm" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></div>
+            </div>
+          </section>
+
+          <div data-customer-shell="footer"></div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Appointment details modal -->
+  <div x-show="viewingAppointment" x-transition.opacity class="fixed inset-0 z-[9998] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4" style="display: none;">
+    <div x-show="viewingAppointment" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" @click.outside="closeAppointmentDetails()" class="bg-slate-900 border border-luxury-800 rounded-2xl max-w-sm w-full p-6 space-y-4">
+      <template x-if="viewingAppointment">
+        <div class="space-y-4">
+          <div class="flex justify-between items-start">
+            <h3 class="font-serif text-lg font-bold text-white" x-text="viewingAppointment.serviceName"></h3>
+            <button @click="closeAppointmentDetails()" class="text-slate-400 hover:text-white leading-none text-xl">&times;</button>
+          </div>
+          <div class="text-base text-slate-700 space-y-1">
+            <p x-text="viewingAppointment.branchName"></p>
+            <p class="font-semibold" x-text="formatApptDateLong(viewingAppointment.date)"></p>
+            <p x-text="formatApptTimeRange(viewingAppointment)"></p>
+          </div>
+          <div class="text-xs text-slate-600">
+            <span class="text-slate-500">Booking Reference:</span>
+            <span class="block font-mono text-slate-700 text-base" x-text="viewingAppointment.id"></span>
+          </div>
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div>
+              <p class="text-slate-500 mb-1">Appointment</p>
+              <span :class="getStatusBadgeClass(viewingAppointment.status)" x-text="getCustomerStatusLabel(viewingAppointment.status)"></span>
+            </div>
+            <div>
+              <p class="text-slate-500 mb-1">Payment</p>
+              <p class="text-slate-700 font-medium" x-text="getPaymentStatusLabel(viewingAppointment)"></p>
+            </div>
+          </div>
+          <template x-if="viewingAppointment.staffName">
+            <p class="text-xs text-slate-600"><span class="text-slate-500">Stylist:</span> <span x-text="viewingAppointment.staffName"></span></p>
+          </template>
+          <button @click="closeAppointmentDetails()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold py-2 rounded-lg transition active:scale-95">Close</button>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <div data-customer-shell="bottom-nav"></div>
+  <div data-customer-shell="signout"></div>
+
+  <!-- App logic, split by concern. Only what this page's markup uses:
+       the next-appointment card, appointment details, and status
+       badges. Booking, reviews, home service, and profile mixins live
+       on their own pages. -->
+  <script src="../../function/customer/customer-shell.js?v=20261110"></script>
+  <script src="../../function/customer/dashboard-helpers.js"></script>
+  <script src="../../function/customer/dashboard-state.js"></script>
+  <script src="../../function/customer/dashboard-notifications.js"></script>
+  <script src="../../function/customer/dashboard-appointments.js"></script>
+  <script src="../../function/shared/live-sync.js?v=20261110"></script>
+  <script src="../../function/customer/dashboard.js"></script>
+</body>
+</html>

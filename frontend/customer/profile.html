@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leo Mejillano Salon - My Profile</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            luxury: {
+              50: '#F4FBFA', 100: '#E5F2F0', 200: '#C7E0DD', 500: '#006D6F',
+              600: '#006D6F', 700: '#06464A', 800: '#06464A', 900: '#06464A', 950: '#FFF8EE',
+            },
+            gold: {
+              100: '#fef08a', 400: '#facc15', 500: '#eab308', 600: '#ca8a04',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    [x-cloak] { display: none !important; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #FFF8EE; }
+    ::-webkit-scrollbar-thumb { background: #006D6F; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #06464A; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .stagger-item { animation: fadeUp .45s cubic-bezier(.16,1,.3,1) both; }
+
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    .skeleton { background: linear-gradient(90deg, #FFF8EE 25%, #E8DCC8 37%, #FFF8EE 63%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; }
+
+    @keyframes gentlePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+    .pulse-badge { animation: gentlePulse 1.6s ease-in-out infinite; }
+
+    @keyframes topbarShine { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+    .topbar-shine { background-size: 200% 100%; animation: topbarShine 7s linear infinite; }
+
+    .card-lift { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+    .card-lift:hover { transform: translateY(-3px); box-shadow: 0 12px 24px -8px rgba(0, 109, 111, 0.35); }
+  
+    /* On/off switch: grey pill when off, green when on, white knob slides across. */
+    .lm-switch { position:relative !important; display:inline-block !important; flex:none !important; width:52px !important; height:30px !important; min-width:52px !important; min-height:0 !important; max-height:30px !important; box-sizing:border-box !important; vertical-align:middle; padding:0 !important; border-radius:999px !important; border:2px solid #cfcfcf !important; background:#d4d4d4 !important; cursor:pointer; transition:background-color .2s, border-color .2s; }
+    .lm-switch.is-on { background:#8bc34a !important; border-color:#8bc34a !important; }
+    .lm-switch:focus-visible { outline:3px solid #006d6f; outline-offset:2px; }
+    .lm-switch-knob { position:absolute !important; top:0 !important; left:0 !important; width:26px !important; height:26px !important; min-height:0 !important; box-sizing:border-box !important; border-radius:50% !important; background:#fff !important; border:0 !important; box-shadow:0 1px 3px rgba(0,0,0,.3); transform:translateX(0); transition:transform .2s; }
+    .lm-switch.is-on .lm-switch-knob { transform:translateX(22px); }
+    @media (prefers-reduced-motion: reduce) { .lm-switch, .lm-switch-knob { transition:none; } }
+  </style>
+  <link rel="stylesheet" href="../../frontend/customer/customer-theme.css?v=20261104-notif2">
+  <script src="../../function/customer/theme-config.js"></script>
+  <link rel="stylesheet" href="../../frontend/shared/responsive-base.css?v=20261103b" />
+  <link rel="stylesheet" href="../../frontend/shared/portal-colors.css?v=20261103-signout-cream" />
+  <script src="../../function/shared/toast.js"></script>
+  <script src="../../function/shared/portal-presentation.js"></script>
+  <!-- Clean theme: loaded last so it overrides older theme colours. -->
+  <link rel="stylesheet" href="../../frontend/shared/clean-theme.css?v=20261104-notif4">
+  <!-- Customer portal shell (sidebar, header, bottom nav); loaded after the shared themes. -->
+  <link rel="stylesheet" href="../../frontend/customer/customer-portal.css?v=20261110">
+</head>
+<body data-customer-page="profile" data-page-title="My Profile" class="salon-portal bg-luxury-950 text-slate-100 font-sans min-h-screen antialiased selection:bg-luxury-500 selection:text-white"
+      x-data="customerApp()" x-init="init()" x-cloak>
+
+
+  <div class="flex h-screen overflow-hidden flex-col md:flex-row">
+
+    <div data-customer-shell="sidebar"></div>
+
+    <main class="flex-1 flex flex-col bg-slate-950 overflow-y-auto">
+
+      <div data-customer-shell="header"></div>
+
+      <div x-show="isBooting" class="p-6 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="h-28 rounded-2xl skeleton"></div>
+          <div class="h-28 rounded-2xl skeleton"></div>
+          <div class="h-28 rounded-2xl skeleton"></div>
+        </div>
+        <div class="h-64 rounded-2xl skeleton"></div>
+      </div>
+
+      <div x-show="!isBooting" x-transition:enter="transition ease-out duration-500" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+
+        <div class="cp-page">
+          <div data-customer-shell="intro" data-eyebrow="A LITTLE ABOUT YOU" data-title="My" data-accent="profile" data-text="Keep your details up to date for a smoother visit."></div>
+          <div class="cp-profile-layout">
+            <!-- Summary: photo, name, counts and shortcuts -->
+            <section class="cp-card cp-profile-summary" aria-label="Your account">
+              <div class="cp-profile-cover" aria-hidden="true"></div>
+              <div class="cp-photo-frame" :aria-busy="isUploadingPhoto.toString()">
+                <img x-show="customerProfile.profilePicture" :src="customerProfile.profilePicture" alt="Your profile photo" @error="customerProfile.profilePicture = ''">
+                <span x-show="!customerProfile.profilePicture" aria-hidden="true" x-text="(customerProfile.name || '').split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase()"></span>
+                <span x-show="isUploadingPhoto" class="cp-photo-busy" style="display: none;">Saving…</span>
+              </div>
+              <h2 x-text="customerProfile.name"></h2>
+              <p class="cp-profile-role">Customer account</p>
+              <span class="cp-active-pill"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="m4 12 5 5L20 6"/></svg> Active account</span>
+              <div class="cp-photo-actions">
+                <label for="profile-picture-upload" class="cp-btn cp-btn-outline" :class="isUploadingPhoto ? 'is-disabled' : ''">
+                  <svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9zM15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                  <span x-text="customerProfile.profilePicture ? 'Change Profile Photo' : 'Add Profile Photo'"></span>
+                </label>
+                <input type="file" @change="handleProfilePictureUpload($event)" :disabled="isUploadingPhoto" accept="image/png, image/jpeg, image/webp" class="sr-only" id="profile-picture-upload">
+              </div>
+              <p class="cp-photo-note">PNG, JPG or WebP · Saved as soon as you choose it</p>
+              <div class="cp-mini-stats">
+                <div><strong x-text="(appointments || []).length"></strong><span>Bookings</span></div>
+                <div><strong x-text="(myReviews || []).length"></strong><span>Reviews</span></div>
+              </div>
+              <div class="cp-summary-links">
+                <a href="dashboard.html#cp-loyalty-title" class="cp-summary-link is-highlight"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3L22 9.3l-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3L7 14.2 2 9.3l6.9-1z"/></svg><span>My Loyalty Card</span><span class="cp-summary-count" x-text="customerProfile.loyaltyCard.stamps + '/10'"></span><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
+                <a href="reviews.html" class="cp-summary-link"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.5 5.5a5.5 5.5 0 0 0-7.8 0L12 6.2l-.7-.7a5.5 5.5 0 0 0-7.8 7.8L12 22l8.5-8.7a5.5 5.5 0 0 0 0-7.8z"/></svg><span>My Feedback</span><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
+              </div>
+            </section>
+
+            <div class="cp-profile-forms">
+            <section class="bg-slate-900 border border-luxury-900 rounded-2xl p-5 sm:p-6">
+              <h3 class="font-serif text-base font-bold text-white">Personal Information</h3>
+              <p class="text-xs text-slate-400 mt-1">Keep your contact details up to date to receive appointment reminders and important notifications.</p>
+              <form @submit.prevent="saveProfile()" class="space-y-4 text-xs mt-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label for="profile-name" class="block text-slate-400 mb-1">Full Name</label>
+                  <input id="profile-name" type="text" autocomplete="name" maxlength="255" x-model="customerProfile.name" required class="w-full bg-slate-950 text-slate-200 rounded-lg p-2.5 border border-slate-800 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                </div>
+                <div>
+                  <label for="profile-phone" class="block text-slate-400 mb-1">Mobile Number</label>
+                  <input id="profile-phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="11" placeholder="09XXXXXXXXX" x-model="customerProfile.phone" required class="w-full bg-slate-950 text-slate-200 rounded-lg p-2.5 border border-slate-800 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                </div>
+                <div class="sm:col-span-2">
+                  <label for="profile-email" class="block text-slate-400 mb-1">Email Address</label>
+                  <input id="profile-email" type="email" autocomplete="email" x-model="customerProfile.email" required class="w-full bg-slate-950 text-slate-200 rounded-lg p-2.5 border border-slate-800 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                </div>
+                </div>
+                <div>
+                  <h4 class="text-slate-300 mb-2">Permanent / Profile Address</h4>
+                  <input id="profileAddressText" type="hidden">
+                  <div id="profile-address" data-address-target="profileAddressText" data-address-optional="true"></div>
+                </div>
+<div class="pt-2 flex justify-end">
+                  <button type="submit" class="px-5 py-2 bg-gradient-to-r from-luxury-600 to-luxury-800 text-white font-bold rounded-lg hover:shadow-lg hover:shadow-luxury-600/20 transition active:scale-95">Save Changes</button>
+                </div>
+              </form>
+            </section>
+
+            <section class="bg-slate-900 border border-luxury-900 rounded-2xl p-5 sm:p-6">
+              <h3 class="font-serif text-base font-bold text-white">Notification Preferences</h3>
+              <p class="text-xs text-slate-400 mt-1">Choose how you receive updates about your appointments and exclusive offers.</p>
+              <div class="mt-4 space-y-3 text-xs">
+                <div class="bg-slate-800/50 p-4 rounded-lg flex items-center justify-between">
+                  <div>
+                    <p class="font-medium text-white">Email Notifications</p>
+                    <p class="text-slate-400">Receive reminders and promotions at <span class="font-semibold" x-text="customerProfile.email"></span>.</p>
+                  </div>
+                  <button type="button" role="switch" aria-label="Email notifications" @click="customerProfile.notificationPrefs.email = !customerProfile.notificationPrefs.email"
+                          :aria-checked="(!!customerProfile.notificationPrefs.email).toString()"
+                          :class="customerProfile.notificationPrefs.email ? 'is-on' : ''" class="lm-switch">
+                    <span class="lm-switch-knob" aria-hidden="true"></span>
+                  </button>
+                </div>
+
+                <div class="bg-slate-800/50 p-4 rounded-lg flex items-center justify-between">
+                  <div>
+                    <p class="font-medium text-white">SMS Notifications</p>
+                    <p class="text-slate-400">Get appointment alerts on your phone at <span class="font-semibold" x-text="customerProfile.phone"></span>.</p>
+                  </div>
+                  <button type="button" role="switch" aria-label="SMS notifications" @click="customerProfile.notificationPrefs.sms = !customerProfile.notificationPrefs.sms"
+                          :aria-checked="(!!customerProfile.notificationPrefs.sms).toString()"
+                          :class="customerProfile.notificationPrefs.sms ? 'is-on' : ''" class="lm-switch">
+                    <span class="lm-switch-knob" aria-hidden="true"></span>
+                  </button>
+                </div>
+              </div>
+              <div class="pt-4 flex justify-end">
+                <button type="button" @click="saveProfile()" class="px-5 py-2 bg-gradient-to-r from-luxury-600 to-luxury-800 text-white text-xs font-bold rounded-lg hover:shadow-lg hover:shadow-luxury-600/20 transition active:scale-95">Save Preferences</button>
+              </div>
+            </section>
+
+            <section class="bg-slate-900 border border-luxury-900 rounded-2xl p-5 sm:p-6">
+              <h3 class="font-serif text-base font-bold text-white">Change Password</h3>
+              <p class="prose-justify text-xs text-slate-400 mt-1">Change your password regularly to keep your account secure. We'll email a code to confirm the change.</p>
+
+              <form x-show="passwordChangeStep === 'form'" @submit.prevent="changePassword()" class="space-y-4 text-xs mt-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label class="block text-slate-400 mb-1">Current Password</label>
+                  <div x-data="{ show: false }" class="relative">
+                    <input type="password" :type="show ? 'text' : 'password'" x-model="passwordForm.current" required class="w-full pr-11 bg-slate-950 text-slate-200 rounded-lg p-2.5 border border-slate-800 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                    <button type="button" @click="show = !show" :aria-label="show ? 'Hide password' : 'Show password'" :aria-pressed="show.toString()" class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 hover:text-slate-300 focus:outline-none focus-visible:text-slate-200"><svg x-show="!show" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z"/><circle cx="12" cy="12" r="3"/></svg><svg x-show="show" x-cloak class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z"/><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" d="M4 3l16 18"/></svg></button>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1">New Password</label>
+                  <div x-data="{ show: false }" class="relative">
+                    <input type="password" :type="show ? 'text' : 'password'" x-model="passwordForm.new" required class="w-full pr-11 bg-slate-950 text-slate-200 rounded-lg p-2.5 border border-slate-800 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                    <button type="button" @click="show = !show" :aria-label="show ? 'Hide password' : 'Show password'" :aria-pressed="show.toString()" class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 hover:text-slate-300 focus:outline-none focus-visible:text-slate-200"><svg x-show="!show" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z"/><circle cx="12" cy="12" r="3"/></svg><svg x-show="show" x-cloak class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z"/><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" d="M4 3l16 18"/></svg></button>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1">Confirm New Password</label>
+                  <div x-data="{ show: false }" class="relative">
+                    <input type="password" :type="show ? 'text' : 'password'" x-model="passwordForm.confirm" required class="w-full pr-11 bg-slate-950 text-slate-200 rounded-lg p-2.5 border border-slate-800 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                    <button type="button" @click="show = !show" :aria-label="show ? 'Hide password' : 'Show password'" :aria-pressed="show.toString()" class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 hover:text-slate-300 focus:outline-none focus-visible:text-slate-200"><svg x-show="!show" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z"/><circle cx="12" cy="12" r="3"/></svg><svg x-show="show" x-cloak class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z"/><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" d="M4 3l16 18"/></svg></button>
+                  </div>
+                </div>
+
+                </div>
+
+                <div class="rounded-xl p-4 border" style="background:#F7F0E4;border-color:#E8DCC8">
+                  <div class="flex items-center justify-between gap-3 mb-3">
+                    <p class="font-bold text-slate-300">Your new password needs</p>
+                    <span class="px-2 py-0.5 rounded-full text-xs font-bold whitespace-nowrap" :style="passwordMeetsRules() ? 'background:#DCFCE7;color:#166534' : 'background:#FFFFFF;color:#475569'" x-text="passwordRules().filter(rule => rule.met).length + ' of 5'"></span>
+                  </div>
+                  <ul class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2" aria-label="Password requirements">
+                    <template x-for="rule in passwordRules()" :key="rule.label">
+                      <li class="flex items-start gap-2" :class="rule.met ? 'font-semibold' : 'text-slate-500'" :style="rule.met ? 'color:#166534' : ''">
+                        <span aria-hidden="true" class="shrink-0 mt-0.5 w-4 h-4 rounded-full flex items-center justify-center" :style="rule.met ? 'background:#166534;color:#FFFFFF' : 'background:#FFFFFF;border:1px solid #D9C9B4'">
+                          <svg x-show="rule.met" class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"></path></svg>
+                        </span>
+                        <span x-text="rule.label"></span>
+                      </li>
+                    </template>
+                  </ul>
+                </div>
+
+                <div x-show="passwordChangeStatus.error" x-text="passwordChangeStatus.error" class="text-xs text-rose-400 bg-rose-950/50 p-2 rounded-lg text-center" x-transition></div>
+
+                <div class="pt-2 flex items-center justify-between gap-3 flex-wrap">
+                  <a href="../auth/forgot-password.html" class="cp-text-link">Forgot Password?</a>
+                  
+                  <button type="submit" :disabled="!canSubmitPassword()" class="px-5 py-2 font-bold rounded-lg transition active:scale-95 disabled:cursor-not-allowed" :style="canSubmitPassword() ? 'background:#006D6F !important;color:#FFFFFF !important;border:1px solid #006D6F !important' : 'background:#F7F0E4 !important;color:#475569 !important;border:1px solid #E8DCC8 !important;opacity:1'">Change Password</button>
+                </div>
+              </form>
+
+              <form x-show="passwordChangeStep === 'verify'" x-cloak @submit.prevent="confirmPasswordChange()" class="space-y-4 text-xs mt-4">
+                <p class="text-slate-400">We emailed a 6-digit confirmation code to <strong class="text-white" x-text="customerProfile.email"></strong>. Enter it below to finish changing your password.</p>
+                <div>
+                  <label class="block text-slate-400 mb-1">Confirmation Code</label>
+                  <input type="text" x-model="passwordChangeCode" required inputmode="numeric" maxlength="6" placeholder="000000" class="w-full bg-slate-950 text-slate-200 rounded-lg p-2.5 border border-slate-800 focus:outline-none focus:ring-1 focus:ring-purple-500 tracking-[0.3em] text-center text-base">
+                </div>
+
+                <div x-show="passwordChangeStatus.error" x-text="passwordChangeStatus.error" class="text-xs text-rose-400 bg-rose-950/50 p-2 rounded-lg text-center" x-transition></div>
+
+                <div class="pt-2 flex justify-end gap-2">
+                  <button type="button" @click="cancelPasswordChangeVerification()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 transition">Cancel</button>
+                  <button type="submit" class="px-5 py-2 bg-gold-500 hover:bg-gold-600 text-slate-900 font-bold rounded-lg transition active:scale-95">Confirm Change</button>
+                </div>
+              </form>
+
+              <div x-show="passwordChangeStatus.success" x-text="passwordChangeStatus.success" class="text-xs text-emerald-400 bg-emerald-950/50 p-2 rounded-lg text-center mt-3" x-transition></div>
+            </section>
+
+            </div>
+          </div>
+          <div data-customer-shell="footer"></div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <div data-customer-shell="bottom-nav"></div>
+  <div data-customer-shell="signout"></div>
+
+  <!-- App logic, split by concern. Only what this page's markup uses:
+       profile picture upload, profile/preferences saving, and password
+       change. Appointments, booking, reviews, and home service mixins
+       live on their own pages. -->
+  <script src="../../function/customer/customer-shell.js?v=20261110"></script>
+  <script src="../../function/customer/dashboard-helpers.js"></script>
+  <script src="../../function/customer/dashboard-state.js"></script>
+  <script src="../../function/customer/dashboard-notifications.js"></script>
+  <script src="../../function/shared/address-form.js"></script>
+  <script src="../../function/customer/dashboard-profile.js"></script>
+  <script src="../../function/shared/live-sync.js?v=20261110"></script>
+  <script src="../../function/customer/dashboard.js"></script>
+</body>
+</html>

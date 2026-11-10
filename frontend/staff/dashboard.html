@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0E3B2F">
+  <title>Dashboard | Leo Mejillano Staff Portal</title>
+
+  <!-- Tailwind is only here for the shared toast.js notifications; the portal's own look is staff-portal.css. -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Alpine plugins (focus trap for the modals, collapse for appointment details) load before Alpine itself. -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.14.1/dist/cdn.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.1/dist/cdn.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="../../frontend/staff/staff-portal.css?v=20261106">
+  <script src="../../function/shared/toast.js"></script>
+  <script src="../../function/shared/confirm-dialog.js"></script>
+</head>
+<body class="sp-body" x-data="staffPortal()">
+
+  <a href="#sp-main" class="sp-skip">Skip to content</a>
+
+  <div class="sp-shell">
+
+    <!-- ===================== Sidebar (tablet rail + desktop) ===================== -->
+    <aside class="sp-sidebar" aria-label="Staff navigation">
+      <div class="sp-brand">
+        <img src="../shared/icon/salon-logo.png" alt="" class="sp-brand-logo">
+        <div class="sp-brand-text">
+          <p class="sp-brand-name">Leo Mejillano</p>
+          <p class="sp-brand-sub">Staff Portal</p>
+        </div>
+      </div>
+
+      <nav class="sp-nav">
+        <template x-for="item in navItems" :key="item.key">
+          <a :href="'#' + item.key" class="sp-nav-link" :class="view === item.key && 'is-active'"
+             :aria-current="view === item.key ? 'page' : null">
+            <span x-html="$icon(item.icon)"></span>
+            <span class="sp-nav-label" x-text="item.label"></span>
+            <span class="sp-nav-short" x-text="item.short"></span>
+          </a>
+        </template>
+      </nav>
+
+      <div class="sp-side-foot">
+        <div class="sp-side-status" x-show="!$store.staff.loading" x-cloak>
+          <span class="sp-dot" :class="'is-' + $store.staff.shift.status"></span>
+          <div class="sp-side-status-text">
+            <p x-text="$store.staff.shiftStatusLabel()"></p>
+            <p class="sp-muted-light" x-text="$store.staff.shift.status === 'off' ? $store.staff.scheduleTodayLabel() : ('Since ' + $store.staff.timeLabel($store.staff.shift.clockIn))"></p>
+          </div>
+        </div>
+        <button type="button" class="sp-nav-link sp-side-signout" @click="openSignOut()">
+          <span x-html="$icon('logout')"></span>
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ===================== Main column ===================== -->
+    <div class="sp-column">
+
+      <!-- Top bar: tablet and desktop -->
+      <header class="sp-topbar">
+        <div class="sp-topbar-title">
+          <h1 id="sp-page-title" tabindex="-1" x-text="pageTitle()">Dashboard</h1>
+          <span class="sp-branch-chip" x-show="$store.staff.profile.branchName" x-cloak>
+            <span x-html="$icon('pin')"></span><span x-text="$store.staff.profile.branchName"></span>
+          </span>
+        </div>
+        <div class="sp-topbar-actions">
+          <div class="sp-notif-wrap">
+            <button type="button" class="sp-icon-btn" @click="toggleNotifications()" :aria-expanded="notificationsOpen" aria-label="Notifications">
+              <span x-html="$icon('bell')"></span>
+              <span class="sp-badge-count" x-show="$store.staff.unreadNotificationCount()" x-text="$store.staff.unreadNotificationCount()" x-cloak></span>
+            </button>
+            <template x-teleport="body">
+              <div class="sp-notif-layer" x-show="notificationsOpen" x-cloak @click.self="notificationsOpen = false">
+              <div class="sp-notif-panel" x-transition.opacity role="dialog" aria-label="Notifications">
+                <div class="sp-notif-head">
+                  <p>Notifications</p>
+                  <button type="button" class="sp-link-btn" @click="$store.staff.markAllNotificationsAsRead()" x-show="$store.staff.unreadNotificationCount()">Mark all as read</button>
+                </div>
+                <div class="sp-notif-list">
+                  <template x-for="n in $store.staff.notifications" :key="n.id">
+                    <div class="sp-notif-item" :class="!n.isRead && 'is-unread'">
+                      <p x-text="n.message"></p>
+                      <p class="sp-muted sp-small" x-text="n.time"></p>
+                    </div>
+                  </template>
+                  <p class="sp-empty-inline" x-show="!$store.staff.notifications.length">You're all caught up.</p>
+                </div>
+              </div>
+              </div>
+            </template>
+          </div>
+          <button type="button" class="sp-user-btn" :class="view === 'profile' && 'is-active'" @click="openProfile()" aria-label="Open My Profile">
+            <span class="sp-avatar sp-avatar-sm">
+              <img x-show="$store.staff.profile.profilePicture" :src="$store.staff.profile.profilePicture" alt="" x-cloak>
+              <span x-show="!$store.staff.profile.profilePicture" x-text="$store.staff.initials()"></span>
+            </span>
+            <span class="sp-user-text">
+              <span class="sp-user-name" x-text="$store.staff.profile.name || 'Staff member'"></span>
+              <span class="sp-user-role" x-text="$store.staff.profile.position"></span>
+            </span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Mobile header -->
+      <header class="sp-mobilebar">
+        <button type="button" class="sp-mobile-user" @click="openProfile()" aria-label="Open My Profile">
+          <span class="sp-avatar sp-avatar-md">
+            <img x-show="$store.staff.profile.profilePicture" :src="$store.staff.profile.profilePicture" alt="" x-cloak>
+            <span x-show="!$store.staff.profile.profilePicture" x-text="$store.staff.initials()"></span>
+            <span class="sp-avatar-dot" :class="'is-' + $store.staff.shift.status"></span>
+          </span>
+          <span class="sp-mobile-user-text">
+            <span class="sp-user-name" x-text="$store.staff.profile.name || 'Staff member'"></span>
+            <span class="sp-mobile-branch"><span x-html="$icon('pin')"></span><span x-text="$store.staff.profile.branchName || 'Staff Portal'"></span></span>
+          </span>
+        </button>
+        <div class="sp-mobile-actions">
+          <button type="button" class="sp-icon-btn sp-icon-btn-dark" @click="toggleNotifications()" aria-label="Notifications">
+            <span x-html="$icon('bell')"></span>
+            <span class="sp-badge-count" x-show="$store.staff.unreadNotificationCount()" x-text="$store.staff.unreadNotificationCount()" x-cloak></span>
+          </button>
+          <button type="button" class="sp-icon-btn sp-icon-btn-dark" @click="openSignOut()" aria-label="Sign out">
+            <span x-html="$icon('logout')"></span>
+          </button>
+        </div>
+      </header>
+
+      <main id="sp-main" class="sp-main" tabindex="-1">
+
+        <!-- Load error -->
+        <div class="sp-alert sp-alert-error" x-show="$store.staff.loadError" x-cloak role="alert">
+          <span x-html="$icon('alert')"></span>
+          <p x-text="$store.staff.loadError"></p>
+          <button type="button" class="sp-btn sp-btn-secondary sp-btn-sm" @click="$store.staff.refresh()">Try again</button>
+        </div>
+
+        <h2 class="sp-mobile-title" x-text="pageTitle()" x-show="view !== 'dashboard'"></h2>
+
+        <!-- ===================== DASHBOARD ===================== -->
+        <section x-show="view === 'dashboard'" class="sp-view" aria-labelledby="sp-page-title">
+
+          <div class="sp-welcome">
+            <div>
+              <p class="sp-welcome-hello"><span x-text="$store.staff.greeting()"></span>, <span x-text="$store.staff.firstName()"></span></p>
+              <p class="sp-welcome-meta">
+                <span x-text="$store.staff.longDateLabel()"></span>
+                <span class="sp-sep" aria-hidden="true">·</span>
+                <span x-text="$store.staff.profile.branchName"></span>
+              </p>
+            </div>
+          </div>
+
+          <div class="sp-dash-grid">
+
+            <!-- Today's Shift -->
+            <article class="sp-card sp-shift-card" :class="'is-' + $store.staff.shift.status" aria-labelledby="shift-title">
+              <div class="sp-card-head">
+                <div>
+                  <h3 id="shift-title" class="sp-card-title">Today's Shift</h3>
+                  <p class="sp-muted sp-small">Scheduled <span x-text="$store.staff.scheduleTodayLabel()"></span></p>
+                </div>
+                <span class="sp-status-pill" :class="'is-' + $store.staff.shift.status" role="status">
+                  <span class="sp-dot" :class="'is-' + $store.staff.shift.status"></span>
+                  <span x-text="$store.staff.shiftStatusLabel()"></span>
+                </span>
+              </div>
+
+              <div class="sp-shift-clock">
+                <p class="sp-clock" x-text="$store.staff.clockLabel()" aria-live="off"></p>
+                <p class="sp-muted sp-small">Current time (Philippine time)</p>
+              </div>
+
+              <div class="sp-break-banner" x-show="$store.staff.shift.status === 'break'" x-cloak>
+                <span x-html="$icon('coffee')"></span>
+                <p>On break for <strong x-text="$store.staff.durationLabel($store.staff.currentBreakSeconds())"></strong>. Break time is not counted as work hours.</p>
+              </div>
+
+              <div class="sp-shift-actions">
+                <template x-if="$store.staff.shift.status === 'off'">
+                  <button type="button" class="sp-btn sp-btn-primary sp-btn-lg sp-btn-block" @click="shiftIn()" :disabled="$store.staff.shiftBusy || $store.staff.loading">
+                    <span x-html="$icon('login')"></span><span x-text="$store.staff.shiftBusy ? 'Starting…' : 'Shift In'"></span>
+                  </button>
+                </template>
+                <template x-if="$store.staff.shift.status === 'on'">
+                  <div class="sp-btn-pair">
+                    <button type="button" class="sp-btn sp-btn-amber sp-btn-lg" @click="startBreak()" :disabled="$store.staff.shiftBusy">
+                      <span x-html="$icon('coffee')"></span><span>Start Break</span>
+                    </button>
+                    <button type="button" class="sp-btn sp-btn-danger sp-btn-lg" @click="openShiftOut()" :disabled="$store.staff.shiftBusy">
+                      <span x-html="$icon('logout')"></span><span>Shift Out</span>
+                    </button>
+                  </div>
+                </template>
+                <template x-if="$store.staff.shift.status === 'break'">
+                  <div class="sp-btn-pair">
+                    <button type="button" class="sp-btn sp-btn-primary sp-btn-lg" @click="endBreak()" :disabled="$store.staff.shiftBusy">
+                      <span x-html="$icon('play')"></span><span>End Break</span>
+                    </button>
+                    <button type="button" class="sp-btn sp-btn-danger-outline sp-btn-lg" @click="openShiftOut()" :disabled="$store.staff.shiftBusy">
+                      <span x-html="$icon('logout')"></span><span>Shift Out</span>
+                    </button>
+                  </div>
+                </template>
+              </div>
+
+              <dl class="sp-shift-stats">
+                <div>
+                  <dt>Time In</dt>
+                  <dd x-text="$store.staff.timeLabel($store.staff.shift.clockIn || $store.staff.shift.today.timeIn)"></dd>
+                </div>
+                <div>
+                  <dt>Time Out</dt>
+                  <dd x-text="$store.staff.shift.status === 'off' ? $store.staff.timeLabel($store.staff.shift.today.timeOut) : '--'"></dd>
+                </div>
+                <div>
+                  <dt>Break</dt>
+                  <dd x-text="$store.staff.durationLabel($store.staff.shift.status === 'off' ? $store.staff.shift.today.breakSeconds : $store.staff.liveBreakSeconds())"></dd>
+                </div>
+                <div>
+                  <dt>Hours Worked</dt>
+                  <dd x-text="$store.staff.durationLabel($store.staff.liveTodayWorkedSeconds())"></dd>
+                </div>
+              </dl>
+            </article>
+
+            <!-- Today's Overview -->
+            <article class="sp-card sp-overview-card" aria-labelledby="overview-title">
+              <h3 id="overview-title" class="sp-card-title">Today's Overview</h3>
+              <div class="sp-stat-grid">
+                <button type="button" class="sp-stat" @click="apptTab = 'today'; go('appointments')">
+                  <span class="sp-stat-icon is-blue" x-html="$icon('calendar')"></span>
+                  <span class="sp-stat-value" x-text="$store.staff.todayAssignedCount()"></span>
+                  <span class="sp-stat-label">Assigned appointments</span>
+                </button>
+                <button type="button" class="sp-stat" @click="apptTab = 'completed'; go('appointments')">
+                  <span class="sp-stat-icon is-teal" x-html="$icon('checkCircle')"></span>
+                  <span class="sp-stat-value" x-text="$store.staff.todayCompletedCount()"></span>
+                  <span class="sp-stat-label">Completed services</span>
+                </button>
+                <div class="sp-stat">
+                  <span class="sp-stat-icon" :class="{ 'is-green': $store.staff.shift.status === 'on', 'is-amber': $store.staff.shift.status === 'break', 'is-slate': $store.staff.shift.status === 'off' }" x-html="$icon('user')"></span>
+                  <span class="sp-stat-value sp-stat-value-text" x-text="$store.staff.shiftStatusLabel()"></span>
+                  <span class="sp-stat-label">Working status</span>
+                </div>
+                <button type="button" class="sp-stat" @click="go('schedule')">
+                  <span class="sp-stat-icon is-gold" x-html="$icon('clock')"></span>
+                  <span class="sp-stat-value sp-stat-value-text" x-text="$store.staff.scheduleTodayLabel()"></span>
+                  <span class="sp-stat-label">Scheduled shift</span>
+                </button>
+              </div>
+            </article>
+
+            <!-- Upcoming Appointments -->
+            <article class="sp-card sp-upcoming-card" aria-labelledby="upcoming-title">
+              <div class="sp-card-head">
+                <h3 id="upcoming-title" class="sp-card-title">Upcoming Appointments</h3>
+                <a href="#appointments" class="sp-link-btn">View all <span x-html="$icon('chevronRight')"></span></a>
+              </div>
+
+              <div class="sp-skeleton-list" x-show="$store.staff.loading">
+                <div class="sp-skeleton"></div><div class="sp-skeleton"></div>
+              </div>
+
+              <ul class="sp-appt-list" x-show="!$store.staff.loading && dashboardUpcoming().length" x-cloak>
+                <template x-for="appt in dashboardUpcoming()" :key="appt.id">
+                  <li class="sp-appt-row">
+                    <div class="sp-appt-time">
+                      <span x-text="appt.time.replace(/^0/, '')"></span>
+                      <span class="sp-muted sp-small" x-text="appt.date === $store.staff.todayISO() ? 'Today' : $store.staff.formatDate(appt.date, { month: 'short', day: 'numeric' })"></span>
+                    </div>
+                    <div class="sp-appt-main">
+                      <p class="sp-appt-client" x-text="appt.clientName"></p>
+                      <p class="sp-muted sp-small sp-clamp" x-text="appt.serviceName"></p>
+                      <div class="sp-chip-row">
+                        <span class="sp-badge" :class="'tone-' + $store.staff.statusTone(appt.status)" x-text="appt.status"></span>
+                        <span class="sp-badge tone-red" x-show="$store.staff.isLate(appt)" x-text="$store.staff.lateLabel(appt)"></span>
+                      </div>
+                    </div>
+                    <div class="sp-appt-actions">
+                      <button type="button" class="sp-btn sp-btn-primary sp-btn-sm" x-show="$store.staff.canStart(appt) && !$store.staff.isMissed(appt)" @click="$store.staff.startService(appt.id)" :disabled="$store.staff.busy">Start</button>
+                      <button type="button" class="sp-btn sp-btn-primary sp-btn-sm" x-show="$store.staff.canComplete(appt)" @click="$store.staff.completeService(appt.id)" :disabled="$store.staff.busy">Finish</button>
+                      <button type="button" class="sp-btn sp-btn-secondary sp-btn-sm" @click="viewAppointment(appt)">View</button>
+                    </div>
+                  </li>
+                </template>
+              </ul>
+
+              <div class="sp-empty" x-show="!$store.staff.loading && !dashboardUpcoming().length" x-cloak>
+                <span x-html="$icon('calendar')"></span>
+                <p class="sp-empty-title">No upcoming appointments</p>
+                <p class="sp-muted sp-small">Bookings assigned to you will show here.</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- ===================== MY APPOINTMENTS ===================== -->
+        <section x-show="view === 'appointments'" x-cloak class="sp-view" aria-label="My Appointments">
+
+          <div class="sp-toolbar">
+            <div class="sp-tabs" role="tablist" aria-label="Filter appointments">
+              <template x-for="tab in apptTabs()" :key="tab.key">
+                <button type="button" role="tab" class="sp-tab" :class="apptTab === tab.key && !apptSearch && 'is-active'" :aria-selected="apptTab === tab.key"
+                        @click="apptTab = tab.key; apptSearch = ''">
+                  <span x-text="tab.label"></span><span class="sp-tab-count" x-text="tab.count"></span>
+                </button>
+              </template>
+            </div>
+            <label class="sp-search">
+              <span x-html="$icon('search')"></span>
+              <input type="search" x-model="apptSearch" placeholder="Search customer, service or reference" aria-label="Search appointments">
+            </label>
+          </div>
+          <p class="sp-muted sp-small sp-mb" x-show="apptSearch" x-cloak>Searching all your appointments.</p>
+
+          <div class="sp-appt-grid" x-show="!$store.staff.loading && filteredAppointments().length">
+            <template x-for="appt in pagedAppointments()" :key="appt.id">
+              <article class="sp-card sp-appt-card" :id="'appt-' + appt.id" :class="expandedId === appt.id && 'is-open'">
+                <div class="sp-appt-card-head">
+                  <div class="sp-appt-card-when">
+                    <p class="sp-appt-card-time"><span x-text="appt.time.replace(/^0/, '')"></span> – <span x-text="appt.endTime.replace(/^0/, '')"></span></p>
+                    <p class="sp-muted sp-small" x-text="$store.staff.formatDate(appt.date, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })"></p>
+                  </div>
+                  <div class="sp-chip-row sp-chip-row-end">
+                    <span class="sp-badge" :class="'tone-' + $store.staff.statusTone(appt.status)" x-text="appt.status"></span>
+                    <span class="sp-badge tone-red" x-show="$store.staff.isLate(appt)" x-text="$store.staff.lateLabel(appt)"></span>
+                  </div>
+                </div>
+
+                <div class="sp-appt-card-body">
+                  <p class="sp-appt-client" x-text="appt.clientName"></p>
+                  <p class="sp-appt-service"><span x-html="$icon('scissors')"></span><span x-text="appt.serviceName || 'Service'"></span></p>
+                  <p class="sp-muted sp-small sp-appt-meta">
+                    <span><span x-html="$icon('pin')"></span><span x-text="appt.branchName || $store.staff.profile.branchName"></span></span>
+                    <span x-text="appt.id"></span>
+                  </p>
+                  <p class="sp-muted sp-small" x-show="appt.otherStylists" x-cloak>
+                    <span x-html="$icon('users')"></span> Shared with <span x-text="appt.otherStylists"></span>
+                    <span x-show="appt.isMainStylist === false">(the main stylist starts and finishes it)</span>
+                  </p>
+                </div>
+
+                <div class="sp-appt-card-actions">
+                  <button type="button" class="sp-btn sp-btn-primary" x-show="$store.staff.canStart(appt) && !$store.staff.isMissed(appt)" @click="$store.staff.startService(appt.id)" :disabled="$store.staff.busy">
+                    <span x-html="$icon('play')"></span><span>Start Service</span>
+                  </button>
+                  <button type="button" class="sp-btn sp-btn-primary" x-show="$store.staff.canComplete(appt)" @click="$store.staff.completeService(appt.id)" :disabled="$store.staff.busy">
+                    <span x-html="$icon('check')"></span><span>Mark as Finished</span>
+                  </button>
+                  <a class="sp-btn sp-btn-secondary" :href="'tel:' + appt.clientPhone" x-show="appt.clientPhone && !$store.staff.isFinished(appt) && !$store.staff.isInactiveAppointment(appt)">
+                    <span x-html="$icon('phone')"></span><span>Call</span>
+                  </a>
+                  <button type="button" class="sp-btn sp-btn-ghost" @click="toggleExpand(appt.id)" :aria-expanded="expandedId === appt.id">
+                    <span x-text="expandedId === appt.id ? 'Hide details' : 'More'"></span>
+                  </button>
+                </div>
+
+                <div class="sp-appt-more" x-show="expandedId === appt.id" x-collapse.duration.200ms x-cloak>
+                  <dl class="sp-detail-list">
+                    <div><dt>Reference</dt><dd x-text="appt.id"></dd></div>
+                    <div><dt>Duration</dt><dd x-text="appt.durationMinutes + ' min'"></dd></div>
+                    <div><dt>Customer phone</dt><dd x-text="appt.clientPhone || '--'"></dd></div>
+                    <div><dt>Amount</dt><dd x-text="'₱' + Number(appt.price || 0).toLocaleString()"></dd></div>
+                  </dl>
+
+                  <!-- Late customer: ask the front desk (it makes the final call) -->
+                  <div class="sp-late-box" x-show="$store.staff.isBeyondGrace(appt)" x-cloak>
+                    <p class="sp-small"><strong>Customer hasn't arrived.</strong> The cashier or admin decides what happens next.</p>
+                    <div class="sp-btn-row">
+                      <button type="button" class="sp-btn sp-btn-secondary sp-btn-sm" @click="$store.staff.requestArrivalHelp(appt.id, 'no_show')" :disabled="$store.staff.busy || $store.staff.hasArrivalRequest(appt, 'no_show')"
+                              x-text="$store.staff.hasArrivalRequest(appt, 'no_show') ? 'No-Show requested' : 'Ask to mark No-Show'"></button>
+                      <button type="button" class="sp-btn sp-btn-secondary sp-btn-sm" @click="$store.staff.requestArrivalHelp(appt.id, 'reschedule')" :disabled="$store.staff.busy || $store.staff.hasArrivalRequest(appt, 'reschedule')"
+                              x-text="$store.staff.hasArrivalRequest(appt, 'reschedule') ? 'Reassign requested' : 'Ask to reassign'"></button>
+                    </div>
+                  </div>
+
+                  <!-- Supplies used on this service -->
+                  <div class="sp-supply" x-show="canLogSupplies(appt)" x-cloak>
+                    <p class="sp-label"><span x-html="$icon('package')"></span> Log supplies used</p>
+                    <div class="sp-supply-row">
+                      <div class="sp-combo" @click.outside="supplyForm.open = false">
+                        <input type="text" class="sp-input" x-model="supplyForm.search" @focus="supplyForm.open = true" @input="supplyForm.open = true; supplyForm.itemId = ''"
+                               placeholder="Search supply" aria-label="Supply">
+                        <ul class="sp-combo-list" x-show="supplyForm.open && supplyOptions().length" x-cloak>
+                          <template x-for="item in supplyOptions()" :key="item.id">
+                            <li><button type="button" @click="chooseSupply(item)" :disabled="item.stock <= 0">
+                              <span x-text="item.name"></span><span class="sp-muted sp-small" x-text="supplyStockLabel(item)"></span>
+                            </button></li>
+                          </template>
+                        </ul>
+                      </div>
+                      <input type="number" min="1" step="1" inputmode="numeric" class="sp-input sp-input-qty" x-model.number="supplyForm.quantity" aria-label="Quantity">
+                      <button type="button" class="sp-btn sp-btn-primary" @click="logSupply(appt.id)" :disabled="$store.staff.busy || !supplyForm.itemId">Log</button>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            </template>
+          </div>
+
+          <div class="sp-skeleton-list" x-show="$store.staff.loading"><div class="sp-skeleton"></div><div class="sp-skeleton"></div><div class="sp-skeleton"></div></div>
+
+          <div class="sp-card sp-empty" x-show="!$store.staff.loading && !filteredAppointments().length" x-cloak>
+            <span x-html="$icon('calendar')"></span>
+            <p class="sp-empty-title" x-text="apptSearch ? 'No appointments match your search' : 'No appointments here'"></p>
+            <p class="sp-muted sp-small" x-text="apptSearch ? 'Try another name, service or reference.' : 'Bookings assigned to you will show in this list.'"></p>
+          </div>
+
+          <nav class="sp-pager" x-show="apptTotalPages() > 1" x-cloak aria-label="Appointments pages">
+            <button type="button" class="sp-btn sp-btn-secondary sp-btn-sm" @click="apptPage = apptCurrentPage() - 1" :disabled="apptCurrentPage() === 1" aria-label="Previous page"><span x-html="$icon('chevronLeft')"></span></button>
+            <span class="sp-small" x-text="pageLabel(apptCurrentPage(), apptPageSize, filteredAppointments().length)"></span>
+            <button type="button" class="sp-btn sp-btn-secondary sp-btn-sm" @click="apptPage = apptCurrentPage() + 1" :disabled="apptCurrentPage() === apptTotalPages()" aria-label="Next page"><span x-html="$icon('chevronRight')"></span></button>
+          </nav>
+        </section>
+
+        <!-- ===================== MY ATTENDANCE ===================== -->
+        <section x-show="view === 'attendance'" x-cloak class="sp-view" aria-label="My Attendance">
+
+          <div class="sp-summary-grid">
+            <div class="sp-card sp-summary">
+              <p class="sp-summary-label">Days worked</p>
+              <p class="sp-summary-value" x-text="attSummary().days"></p>
+            </div>
+            <div class="sp-card sp-summary">
+              <p class="sp-summary-label">Hours worked</p>
+              <p class="sp-summary-value" x-text="$store.staff.durationLabel(attSummary().worked)"></p>
+            </div>
+            <div class="sp-card sp-summary">
+              <p class="sp-summary-label">Total breaks</p>
+              <p class="sp-summary-value" x-text="$store.staff.durationLabel(attSummary().breaks)"></p>
+            </div>
+            <div class="sp-card sp-summary">
+              <p class="sp-summary-label">Status now</p>
+              <p class="sp-summary-value sp-summary-status">
+                <span class="sp-dot" :class="'is-' + $store.staff.shift.status"></span><span x-text="$store.staff.shiftStatusLabel()"></span>
+              </p>
+            </div>
+          </div>
+
+          <div class="sp-card sp-filter-card">
+            <div class="sp-tabs" role="group" aria-label="Date range">
+              <button type="button" class="sp-tab" :class="attRange === 'week' && 'is-active'" @click="setAttRange('week')">This week</button>
+              <button type="button" class="sp-tab" :class="attRange === 'month' && 'is-active'" @click="setAttRange('month')">This month</button>
+              <button type="button" class="sp-tab" :class="attRange === 'all' && 'is-active'" @click="setAttRange('all')">All</button>
+            </div>
+            <div class="sp-date-range">
+              <label><span class="sp-label">From</span><input type="date" class="sp-input" x-model="attFrom" @change="customAttRange()"></label>
+              <label><span class="sp-label">To</span><input type="date" class="sp-input" x-model="attTo" @change="customAttRange()"></label>
+            </div>
+          </div>
+
+          <!-- Desktop / tablet table -->
+          <div class="sp-card sp-table-card" x-show="!$store.staff.loading && filteredAttendance().length" x-cloak>
+            <table class="sp-table">
+              <thead>
+                <tr><th scope="col">Date</th><th scope="col">Time In</th><th scope="col">Time Out</th><th scope="col">Break</th><th scope="col">Total Hours</th><th scope="col">Status</th></tr>
+              </thead>
+              <tbody>
+                <template x-for="row in pagedAttendance()" :key="row.id">
+                  <tr>
+                    <td><span class="sp-strong" x-text="$store.staff.formatDate(row.date)"></span><br><span class="sp-muted sp-small" x-text="$store.staff.formatDate(row.date, { weekday: 'long' })"></span></td>
+                    <td x-text="$store.staff.timeLabel(row.clockIn)"></td>
+                    <td>
+                      <span x-text="row.clockOut ? $store.staff.timeLabel(row.clockOut) : '--'"></span>
+                      <span class="sp-muted sp-small" x-show="row.clockOut && row.clockOut.slice(0, 10) !== row.date" x-cloak>(next day)</span>
+                    </td>
+                    <td x-text="$store.staff.durationLabel(rowBreakSeconds(row))"></td>
+                    <td class="sp-strong" x-text="$store.staff.durationLabel(rowWorkedSeconds(row))"></td>
+                    <td><span class="sp-badge" :class="'tone-' + attStatusTone(row.status)" x-text="row.status"></span></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Phone cards -->
+          <ul class="sp-att-cards" x-show="!$store.staff.loading && filteredAttendance().length" x-cloak>
+            <template x-for="row in pagedAttendance()" :key="row.id">
+              <li class="sp-card sp-att-card">
+                <div class="sp-att-card-head">
+                  <div>
+                    <p class="sp-strong" x-text="$store.staff.formatDate(row.date, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })"></p>
+                    <p class="sp-muted sp-small"><span x-text="$store.staff.timeLabel(row.clockIn)"></span> – <span x-text="row.clockOut ? $store.staff.timeLabel(row.clockOut) : 'now'"></span><span x-show="row.clockOut && row.clockOut.slice(0, 10) !== row.date"> (next day)</span></p>
+                  </div>
+                  <span class="sp-badge" :class="'tone-' + attStatusTone(row.status)" x-text="row.status"></span>
+                </div>
+                <dl class="sp-att-card-stats">
+                  <div><dt>Time In</dt><dd x-text="$store.staff.timeLabel(row.clockIn)"></dd></div>
+                  <div><dt>Time Out</dt><dd x-text="row.clockOut ? $store.staff.timeLabel(row.clockOut) : '--'"></dd></div>
+                  <div><dt>Break</dt><dd x-text="$store.staff.durationLabel(rowBreakSeconds(row))"></dd></div>
+                  <div><dt>Total</dt><dd class="sp-strong" x-text="$store.staff.durationLabel(rowWorkedSeconds(row))"></dd></div>
+                </dl>
+              </li>
+            </template>
+          </ul>
+
+          <div class="sp-skeleton-list" x-show="$store.staff.loading"><div class="sp-skeleton"></div><div class="sp-skeleton"></div></div>
+
+          <div class="sp-card sp-empty" x-show="!$store.staff.loading && !filteredAttendance().length" x-cloak>
+            <span x-html="$icon('clock')"></span>
+            <p class="sp-empty-title">No attendance records for these dates</p>
+            <p class="sp-muted sp-small">Your shifts appear here after you Shift In. Try a wider date range.</p>
+          </div>
+
+          <nav class="sp-pager" x-show="attTotalPages() > 1" x-cloak aria-label="Attendance pages">
+            <button type="button" class="sp-btn sp-btn-secondary sp-btn-sm" @click="attPage = attCurrentPage() - 1" :disabled="attCurrentPage() === 1" aria-label="Previous page"><span x-html="$icon('chevronLeft')"></span></button>
+            <span class="sp-small" x-text="pageLabel(attCurrentPage(), attPageSize, filteredAttendance().length)"></span>
+            <button type="button" class="sp-btn sp-btn-secondary sp-btn-sm" @click="attPage = attCurrentPage() + 1" :disabled="attCurrentPage() === attTotalPages()" aria-label="Next page"><span x-html="$icon('chevronRight')"></span></button>
+          </nav>
+        </section>
+
+        <!-- ===================== MY SCHEDULE ===================== -->
+        <section x-show="view === 'schedule'" x-cloak class="sp-view" aria-label="My Schedule">
+
+          <div class="sp-summary-grid sp-summary-grid-3">
+            <div class="sp-card sp-summary">
+              <p class="sp-summary-label">Assigned branch</p>
+              <p class="sp-summary-value sp-summary-text" x-text="$store.staff.profile.branchName"></p>
+            </div>
+            <div class="sp-card sp-summary">
+              <p class="sp-summary-label">Working days</p>
+              <p class="sp-summary-value"><span x-text="scheduleWorkDays().length"></span><span class="sp-summary-unit"> days / week</span></p>
+            </div>
+            <div class="sp-card sp-summary">
+              <p class="sp-summary-label">Scheduled hours</p>
+              <p class="sp-summary-value"><span x-text="scheduleWeeklyHours()"></span><span class="sp-summary-unit"> hrs / week</span></p>
+            </div>
+          </div>
+
+          <article class="sp-card">
+            <div class="sp-card-head">
+              <div>
+                <h3 class="sp-card-title">Weekly Schedule</h3>
+                <p class="sp-muted sp-small" x-show="scheduleFromBranch()">Your hours follow your branch's opening hours. Ask the admin if your schedule is different.</p>
+                <p class="sp-muted sp-small" x-show="!scheduleFromBranch()" x-cloak>Set by the admin. Ask the admin to change your schedule.</p>
+              </div>
+            </div>
+            <ul class="sp-week">
+              <template x-for="day in $store.staff.schedule" :key="day.dayOfWeek">
+                <li class="sp-week-row" :class="{ 'is-today': day.isToday, 'is-rest': day.isRestDay }">
+                  <div class="sp-week-day">
+                    <p class="sp-strong" x-text="day.dayName"></p>
+                    <p class="sp-muted sp-small" x-text="$store.staff.formatDate(day.date, { month: 'short', day: 'numeric' })"></p>
+                  </div>
+                  <div class="sp-week-hours">
+                    <template x-if="!day.isRestDay && day.start">
+                      <p><span x-text="day.startLabel"></span> – <span x-text="day.endLabel"></span></p>
+                    </template>
+                    <template x-if="day.isRestDay">
+                      <p class="sp-muted">Rest day</p>
+                    </template>
+                    <template x-if="!day.isRestDay && !day.start">
+                      <p class="sp-muted">Not set</p>
+                    </template>
+                  </div>
+                  <div class="sp-week-tag">
+                    <span class="sp-badge tone-green" x-show="day.isToday">Today</span>
+                    <span class="sp-badge tone-slate" x-show="day.isRestDay && !day.isToday">Rest day</span>
+                  </div>
+                </li>
+              </template>
+            </ul>
+            <div class="sp-empty" x-show="!$store.staff.loading && !$store.staff.schedule.length" x-cloak>
+              <span x-html="$icon('schedule')"></span>
+              <p class="sp-empty-title">No schedule yet</p>
+              <p class="sp-muted sp-small">You don't have a branch assigned. Please contact the admin.</p>
+            </div>
+          </article>
+        </section>
+
+        <!-- ===================== MY PROFILE ===================== -->
+        <section x-show="view === 'profile'" x-cloak class="sp-view sp-profile" aria-label="My Profile">
+
+          <article class="sp-card sp-profile-summary">
+            <div class="sp-profile-avatar-wrap">
+              <span class="sp-avatar sp-avatar-xl">
+                <img x-show="avatarSrc()" :src="avatarSrc()" alt="" x-cloak>
+                <span x-show="!avatarSrc()" x-text="$store.staff.initials()"></span>
+              </span>
+              <label class="sp-avatar-edit" title="Change photo">
+                <span x-html="$icon('camera')"></span><span class="sp-sr">Change photo</span>
+                <input type="file" accept="image/png,image/jpeg,image/webp" class="sp-sr" @change="pickPhoto($event)">
+              </label>
+            </div>
+            <div class="sp-profile-id">
+              <p class="sp-profile-name" x-text="$store.staff.profile.name"></p>
+              <p class="sp-muted" x-text="$store.staff.profile.position"></p>
+              <div class="sp-chip-row">
+                <span class="sp-badge" :class="$store.staff.profile.accountStatus === 'Active' ? 'tone-green' : 'tone-red'" x-text="$store.staff.profile.accountStatus"></span>
+                <span class="sp-badge tone-slate" x-text="$store.staff.profile.role"></span>
+              </div>
+            </div>
+            <dl class="sp-profile-facts">
+              <div><dt>Employee ID</dt><dd x-text="$store.staff.profile.employeeCode"></dd></div>
+              <div><dt>Position</dt><dd x-text="$store.staff.profile.position"></dd></div>
+              <div><dt>Assigned Branch</dt><dd x-text="$store.staff.profile.branchName"></dd></div>
+              <div><dt>Account Status</dt><dd x-text="$store.staff.profile.accountStatus"></dd></div>
+              <div><dt>User Role</dt><dd x-text="$store.staff.profile.role"></dd></div>
+            </dl>
+          </article>
+
+          <!-- Personal Information -->
+          <article class="sp-card" aria-labelledby="pi-title">
+            <div class="sp-card-head">
+              <div>
+                <h3 id="pi-title" class="sp-card-title">Personal Information</h3>
+                <p class="sp-muted sp-small" x-show="!editing">Your name and position are managed by the admin.</p>
+                <p class="sp-muted sp-small" x-show="editing" x-cloak>You can change your mobile number and email address.</p>
+              </div>
+              <button type="button" class="sp-btn sp-btn-secondary" x-show="!editing" @click="startEdit()">
+                <span x-html="$icon('edit')"></span><span>Edit Details</span>
+              </button>
+            </div>
+
+            <form class="sp-form" @submit.prevent="saveProfile()" novalidate>
+              <div class="sp-form-grid">
+                <div class="sp-field">
+                  <span class="sp-label">Full Name</span>
+                  <p class="sp-readonly" x-text="$store.staff.profile.name"></p>
+                </div>
+                <div class="sp-field">
+                  <span class="sp-label">Position</span>
+                  <p class="sp-readonly" x-text="$store.staff.profile.position"></p>
+                </div>
+                <div class="sp-field">
+                  <label for="pf-phone" class="sp-label">Mobile Number</label>
+                  <p class="sp-readonly" x-show="!editing" x-text="$store.staff.profile.phone || '--'"></p>
+                  <template x-if="editing">
+                    <div>
+                      <input id="pf-phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="16" class="sp-input" x-model="profileForm.phone"
+                             :aria-invalid="!!profileErrors.phone" aria-describedby="pf-phone-err" placeholder="09XXXXXXXXX">
+                      <p id="pf-phone-err" class="sp-error" x-show="profileErrors.phone" x-text="profileErrors.phone"></p>
+                    </div>
+                  </template>
+                </div>
+                <div class="sp-field">
+                  <label for="pf-email" class="sp-label">Email Address</label>
+                  <p class="sp-readonly sp-break" x-show="!editing" x-text="$store.staff.profile.email"></p>
+                  <template x-if="editing">
+                    <div>
+                      <input id="pf-email" type="email" inputmode="email" autocomplete="email" maxlength="255" class="sp-input" x-model="profileForm.email"
+                             :aria-invalid="!!profileErrors.email" aria-describedby="pf-email-err">
+                      <p id="pf-email-err" class="sp-error" x-show="profileErrors.email" x-text="profileErrors.email"></p>
+                    </div>
+                  </template>
+                </div>
+              </div>
+              <p class="sp-muted sp-small sp-mt" x-show="editing && photoPreview" x-cloak>Your new photo will be saved with these details.</p>
+              <div class="sp-form-actions" x-show="editing" x-cloak>
+                <button type="button" class="sp-btn sp-btn-secondary" @click="cancelEdit()" :disabled="$store.staff.busy">Cancel</button>
+                <button type="submit" class="sp-btn sp-btn-primary" :disabled="$store.staff.busy" x-text="$store.staff.busy ? 'Saving…' : 'Save Changes'"></button>
+              </div>
+            </form>
+          </article>
+
+          <!-- Password & Security -->
+          <article class="sp-card" aria-labelledby="ps-title">
+            <div class="sp-card-head">
+              <div>
+                <h3 id="ps-title" class="sp-card-title">Password &amp; Security</h3>
+                <p class="sp-muted sp-small">Use a strong password you don't use anywhere else.</p>
+              </div>
+              <button type="button" class="sp-btn sp-btn-secondary" x-show="!passwordOpen" @click="openPassword()">
+                <span x-html="$icon('lock')"></span><span>Change Password</span>
+              </button>
+            </div>
+
+            <div class="sp-alert sp-alert-success" x-show="passwordSuccess && !passwordOpen" x-cloak role="status">
+              <span x-html="$icon('checkCircle')"></span><p x-text="passwordSuccess"></p>
+            </div>
+
+            <form class="sp-form" x-show="passwordOpen && passwordStep === 'form'" x-cloak @submit.prevent="submitPassword()" novalidate>
+              <div class="sp-form-grid sp-form-grid-1">
+                <div class="sp-field">
+                  <label for="pw-current" class="sp-label">Current Password</label>
+                  <input id="pw-current" :type="showPasswords ? 'text' : 'password'" autocomplete="current-password" class="sp-input" x-model="passwordForm.currentPassword">
+                </div>
+                <div class="sp-field">
+                  <label for="pw-new" class="sp-label">New Password</label>
+                  <input id="pw-new" :type="showPasswords ? 'text' : 'password'" autocomplete="new-password" class="sp-input" x-model="passwordForm.newPassword" aria-describedby="pw-rules">
+                </div>
+                <div class="sp-field">
+                  <label for="pw-confirm" class="sp-label">Confirm New Password</label>
+                  <input id="pw-confirm" :type="showPasswords ? 'text' : 'password'" autocomplete="new-password" class="sp-input" x-model="passwordForm.confirmPassword">
+                  <p class="sp-error" x-show="passwordForm.confirmPassword && passwordForm.confirmPassword !== passwordForm.newPassword">Passwords do not match.</p>
+                </div>
+              </div>
+              <label class="sp-check">
+                <input type="checkbox" x-model="showPasswords"><span>Show passwords</span>
+              </label>
+              <ul id="pw-rules" class="sp-rules" aria-label="Password requirements">
+                <template x-for="rule in passwordRules()" :key="rule.label">
+                  <li :class="rule.met && 'is-met'"><span x-html="$icon(rule.met ? 'checkCircle' : 'info')"></span><span x-text="rule.label"></span></li>
+                </template>
+                <li :class="passwordForm.newPassword && passwordForm.newPassword !== passwordForm.currentPassword && 'is-met'">
+                  <span x-html="$icon(passwordForm.newPassword && passwordForm.newPassword !== passwordForm.currentPassword ? 'checkCircle' : 'info')"></span><span>Different from your current password</span>
+                </li>
+              </ul>
+              <div class="sp-alert sp-alert-error" x-show="passwordError" x-cloak role="alert"><span x-html="$icon('alert')"></span><p x-text="passwordError"></p></div>
+              <div class="sp-form-actions">
+                <button type="button" class="sp-btn sp-btn-secondary" @click="cancelPassword()" :disabled="$store.staff.busy">Cancel</button>
+                <button type="submit" class="sp-btn sp-btn-primary" :disabled="$store.staff.busy" x-text="$store.staff.busy ? 'Checking…' : 'Update Password'"></button>
+              </div>
+            </form>
+
+            <form class="sp-form" x-show="passwordOpen && passwordStep === 'verify'" x-cloak @submit.prevent="submitPasswordCode()" novalidate>
+              <div class="sp-alert sp-alert-info" role="status"><span x-html="$icon('mail')"></span>
+                <p>We emailed a 6-digit code to <strong x-text="$store.staff.profile.email"></strong>. Enter it to finish changing your password. The code expires in 10 minutes.</p>
+              </div>
+              <div class="sp-field sp-field-code">
+                <label for="pw-code" class="sp-label">Confirmation Code</label>
+                <input id="pw-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" class="sp-input sp-input-code" x-model="passwordCode">
+              </div>
+              <div class="sp-alert sp-alert-error" x-show="passwordError" x-cloak role="alert"><span x-html="$icon('alert')"></span><p x-text="passwordError"></p></div>
+              <div class="sp-form-actions">
+                <button type="button" class="sp-btn sp-btn-secondary" @click="cancelPassword()" :disabled="$store.staff.busy">Cancel</button>
+                <button type="submit" class="sp-btn sp-btn-primary" :disabled="$store.staff.busy" x-text="$store.staff.busy ? 'Updating…' : 'Update Password'"></button>
+              </div>
+            </form>
+          </article>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- ===================== Mobile bottom navigation ===================== -->
+  <nav class="sp-bottomnav" aria-label="Staff navigation">
+    <template x-for="item in navItems" :key="item.key">
+      <a :href="'#' + item.key" class="sp-bottomnav-link" :class="view === item.key && 'is-active'" :aria-current="view === item.key ? 'page' : null">
+        <span x-html="$icon(item.icon)"></span>
+        <span x-text="item.short"></span>
+      </a>
+    </template>
+  </nav>
+
+  <!-- ===================== Shift Out modal ===================== -->
+  <div class="sp-modal" x-show="shiftOutOpen" x-cloak x-transition.opacity @click.self="shiftOutOpen = false">
+    <div class="sp-modal-panel" role="dialog" aria-modal="true" aria-labelledby="so-title" x-trap.noscroll="shiftOutOpen">
+      <div class="sp-modal-icon is-red" x-html="$icon('logout')"></div>
+      <h2 id="so-title" class="sp-modal-title">End Your Shift?</h2>
+      <p class="sp-modal-text">Are you sure you want to end your shift?</p>
+
+      <dl class="sp-modal-stats">
+        <div><dt>Shift In time</dt><dd x-text="$store.staff.timeLabel($store.staff.shift.clockIn)"></dd></div>
+        <div><dt>Current time</dt><dd x-text="$store.staff.timeLabel($store.staff.now)"></dd></div>
+        <div><dt>Total break</dt><dd x-text="$store.staff.durationLabel($store.staff.liveBreakSeconds())"></dd></div>
+        <div><dt>Estimated hours worked</dt><dd class="sp-strong" x-text="$store.staff.durationLabel($store.staff.liveWorkedSeconds())"></dd></div>
+      </dl>
+
+      <div class="sp-alert sp-alert-warning" x-show="$store.staff.shift.status === 'break'" x-cloak>
+        <span x-html="$icon('coffee')"></span><p>Your break will end at the same time as your shift.</p>
+      </div>
+      <div class="sp-alert sp-alert-error" x-show="$store.staff.inProgressAppointments().length" x-cloak>
+        <span x-html="$icon('alert')"></span>
+        <p>You still have a service in progress (<span x-text="$store.staff.inProgressAppointments().map(a => a.clientName).join(', ')"></span>). It must be marked as finished before you Shift Out. On a shared booking, the main stylist does this.</p>
+      </div>
+      <div class="sp-alert sp-alert-info" x-show="!$store.staff.inProgressAppointments().length && remainingTodayAppointments().length" x-cloak>
+        <span x-html="$icon('info')"></span>
+        <p><span x-text="remainingTodayAppointments().length"></span> booking(s) today are still assigned to you. They stay assigned; please let the front desk know if you're leaving.</p>
+      </div>
+
+      <div class="sp-modal-actions">
+        <button type="button" id="shift-out-cancel" class="sp-btn sp-btn-secondary" @click="shiftOutOpen = false" :disabled="$store.staff.shiftBusy">Cancel</button>
+        <button type="button" class="sp-btn sp-btn-danger" @click="confirmShiftOut()" :disabled="$store.staff.shiftBusy || $store.staff.inProgressAppointments().length > 0"
+                x-text="$store.staff.shiftBusy ? 'Ending shift…' : 'Confirm Shift Out'"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== Sign Out modal ===================== -->
+  <div class="sp-modal" x-show="signOutOpen" x-cloak x-transition.opacity @click.self="!signingOut && (signOutOpen = false)">
+    <div class="sp-modal-panel" role="dialog" aria-modal="true" aria-labelledby="sgo-title" x-trap.noscroll="signOutOpen">
+      <div class="sp-modal-icon is-slate" x-html="$icon('logout')"></div>
+      <h2 id="sgo-title" class="sp-modal-title">Sign Out of Staff Portal?</h2>
+      <p class="sp-modal-text">Are you sure you want to sign out of your account?</p>
+      <div class="sp-alert sp-alert-info" x-show="$store.staff.shift.status !== 'off'" x-cloak>
+        <span x-html="$icon('info')"></span><p>You are still <strong x-text="$store.staff.shiftStatusLabel()"></strong>. Signing out keeps your shift running; it will show again when you log back in.</p>
+      </div>
+      <form id="sign-out-form" method="post" action="../../backend/auth/logout.php?portal=staff" class="sp-hidden">
+        <input type="hidden" name="csrfToken" :value="$store.staff.csrfToken">
+      </form>
+      <div class="sp-modal-actions">
+        <button type="button" id="sign-out-cancel" class="sp-btn sp-btn-secondary" @click="signOutOpen = false" :disabled="signingOut">Cancel</button>
+        <button type="button" class="sp-btn sp-btn-danger" @click="confirmSignOut()" :disabled="signingOut" x-text="signingOut ? 'Signing out…' : 'Sign Out'"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../function/shared/appointment-arrival.js"></script>
+  <script src="../../function/shared/live-sync.js?v=20261110"></script>
+  <script src="../../function/staff/shared-data.js?v=20261110"></script>
+  <script src="../../function/staff/portal.js?v=20261106"></script>
+</body>
+</html>
