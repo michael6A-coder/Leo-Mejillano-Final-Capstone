@@ -262,12 +262,9 @@ document.addEventListener('alpine:init', () => {
    each page's x-init alongside that page's own init logic. */
 function adminHighlightNav() {
   const current = location.pathname.split('/').pop();
+  // Styling lives in frontend/admin/admin-panel.css ([aria-current="page"]).
   document.querySelectorAll('[data-nav-page]').forEach(link => {
-    const isActive = link.getAttribute('data-nav-page') === current;
-    link.classList.toggle('admin-nav-active', isActive);
-    link.classList.toggle('font-medium', isActive);
-    link.classList.toggle('border-l-4', isActive);
-    link.classList.toggle('border-gold-400', isActive);
-    link.classList.toggle('text-slate-400', !isActive);
+    if (link.getAttribute('data-nav-page') === current) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
   });
 }
