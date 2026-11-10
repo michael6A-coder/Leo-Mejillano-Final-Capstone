@@ -7,7 +7,7 @@
   border-color: var(--brand-teal);
   color: #fff;
 }
-.dark #bookSlotGrid .slot-btn.is-selected { background-color: rgb(var(--c-plum)); border-color: rgb(var(--c-plum)); color: #0D1616; }
+.dark #bookSlotGrid .slot-btn.is-selected { background-color: rgb(var(--c-plum)); border-color: rgb(var(--c-plum)); color: var(--brand-deep); }
 /* Hover tints only on devices that can hover, so a tap does not stick. */
 @media (hover: none) {
   #bookSlotGrid .slot-btn:not(.is-selected):hover,
@@ -19,7 +19,7 @@
 #bookingModalBox button.btn-text:disabled {
   background-color: transparent;
   border-color: transparent;
-  color: rgb(var(--c-ink) / .5);
+  color: var(--muted);
   text-decoration: none;
 }
 
@@ -52,7 +52,7 @@
 #bookingOtpForm .book-otp-digit:focus-visible { outline: none !important; }
 
 /* ================= Guest booking wizard ================= */
-:root { --bk-teal: var(--brand-teal, #006D6F); }
+:root { --bk-teal: var(--brand-teal, var(--brand)); }
 .bk-visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; margin: -1px !important; padding: 0 !important; overflow: hidden !important; clip: rect(0 0 0 0) !important; white-space: nowrap !important; border: 0 !important; }
 .bk-invisible { visibility: hidden; }
 
@@ -82,13 +82,13 @@
 /* Sections */
 .bk-sec { border: 1px solid rgb(var(--c-bronze) / .35); border-radius: 1rem; padding: 1rem; background: rgb(var(--c-panel)); scroll-margin-top: 1rem; }
 @media (min-width: 640px) { .bk-sec { padding: 1.125rem 1.25rem; } }
-.bk-sec.has-error { border-color: #be123c; box-shadow: 0 0 0 1px rgb(190 18 60 / .35); }
+.bk-sec.has-error { border-color: var(--danger); box-shadow: 0 0 0 1px rgb(156 30 21 / .35); }
 .bk-sec-title { display: flex; align-items: center; gap: .625rem; margin: 0 0 .75rem; font-family: var(--font-display, inherit); font-size: 1.125rem; line-height: 1.3; color: rgb(var(--c-ink)); }
-.bk-sec-num { flex: none; width: 1.625rem; height: 1.625rem; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-family: inherit; font-size: .8rem; font-weight: 700; background: rgb(var(--c-bronze) / .2); color: rgb(var(--c-ink) / .75); }
+.bk-sec-num { flex: none; width: 1.625rem; height: 1.625rem; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-family: inherit; font-size: .8rem; font-weight: 700; background: rgb(var(--c-bronze) / .2); color: var(--text-body-color); }
 .bk-sec-done { display: none; margin-left: auto; font-size: .75rem; font-weight: 700; color: var(--bk-teal); }
 .bk-sec.is-complete .bk-sec-num { background: var(--bk-teal); color: #fff; }
 .bk-sec.is-complete .bk-sec-done { display: inline; }
-.dark .bk-sec.is-complete .bk-sec-num { color: #0D1616; }
+.dark .bk-sec.is-complete .bk-sec-num { color: var(--brand-deep); }
 .bk-sec-schedule > div + div { margin-top: 1rem; }
 
 /* Summary */
@@ -96,20 +96,20 @@
 .bk-aside-title { font-family: var(--font-display, inherit); font-size: 1.125rem; margin: 0 0 .75rem; color: rgb(var(--c-ink)); }
 .bk-sum-list { margin: 0; display: grid; gap: .5rem; font-size: .85rem; }
 .bk-sum-row { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); gap: .5rem; }
-.bk-sum-row dt { color: rgb(var(--c-ink) / .55); }
+.bk-sum-row dt { color: var(--muted); }
 .bk-sum-row dd { margin: 0; color: rgb(var(--c-ink)); font-weight: 600; overflow-wrap: anywhere; }
-.bk-sum-row dd.is-empty { color: rgb(var(--c-ink) / .4); font-weight: 400; font-style: italic; }
+.bk-sum-row dd.is-empty { color: var(--muted); font-weight: 400; font-style: italic; }
 .bk-sum-services { list-style: none; margin: 0; padding: 0; display: grid; gap: .2rem; }
 .bk-sum-services li { display: flex; justify-content: space-between; gap: .5rem; }
 .bk-sum-services li span:last-child { white-space: nowrap; font-weight: 400; }
 .bk-sum-money { margin: .875rem 0 0; padding-top: .75rem; border-top: 1px dashed rgb(var(--c-bronze) / .5); display: grid; gap: .3rem; font-size: .875rem; }
 .bk-sum-money div { display: flex; justify-content: space-between; gap: .75rem; }
-.bk-sum-money dt { color: rgb(var(--c-ink) / .65); }
+.bk-sum-money dt { color: var(--text-body-color); }
 .bk-sum-money dd { margin: 0; font-weight: 700; color: rgb(var(--c-ink)); white-space: nowrap; }
 .bk-sum-money .is-paynow dt, .bk-sum-money .is-paynow dd { color: var(--bk-teal); font-size: 1rem; }
-.bk-sum-hint { margin-top: .5rem; font-size: .75rem; color: rgb(var(--c-ink) / .55); }
+.bk-sum-hint { margin-top: .5rem; font-size: .75rem; color: var(--muted); }
 .bk-btn-block { display: block; width: 100%; margin-top: 1rem; }
-.bk-aside-note { margin-top: .5rem; font-size: .72rem; line-height: 1.4; text-align: center; color: rgb(var(--c-ink) / .5); }
+.bk-aside-note { margin-top: .5rem; font-size: .72rem; line-height: 1.4; text-align: center; color: var(--muted); }
 
 /* Mobile/tablet sticky bar: total + submit. Hidden on desktop where the aside is sticky. */
 .bk-mobilebar {
@@ -119,7 +119,7 @@
 }
 @media (min-width: 640px) { .bk-mobilebar { bottom: -2.25rem; margin: 0 -2.25rem -2.25rem; padding: 1rem 2.25rem; border-radius: 0 0 1.5rem 1.5rem; } }
 @media (min-width: 1024px) { .bk-mobilebar { display: none; } }
-.bk-mobilebar-total { min-width: 0; font-size: .8rem; line-height: 1.3; color: rgb(var(--c-ink) / .7); }
+.bk-mobilebar-total { min-width: 0; font-size: .8rem; line-height: 1.3; color: var(--text-body-color); }
 .bk-mobilebar-total b { display: block; font-size: 1rem; color: var(--bk-teal); }
 .bk-mobilebar .bk-btn-next { flex: none; }
 /* Below desktop the aside's own button is redundant with the sticky bar. */
@@ -148,13 +148,13 @@
 .bk-branch-card { padding: .875rem 2rem .875rem 1rem; cursor: pointer; }
 .bk-branch-card[disabled] { opacity: .45; cursor: not-allowed; }
 .bk-branch-name { display: block; font-weight: 700; color: rgb(var(--c-ink)); }
-.bk-branch-meta { display: block; font-size: .75rem; color: rgb(var(--c-ink) / .6); margin-top: .125rem; }
+.bk-branch-meta { display: block; font-size: .75rem; color: var(--text-body-color); margin-top: .125rem; }
 
 /* Services */
 .bk-search { width: 100%; padding: .55rem .875rem; border: 1px solid rgb(var(--c-bronze) / .5); background: rgb(var(--c-panel)); border-radius: .75rem; font-size: .9rem; margin-bottom: .5rem; }
 .bk-search:focus { outline: none; border-color: var(--bk-teal); }
 .bk-chips { display: flex; flex-wrap: wrap; gap: .375rem; margin-bottom: .625rem; }
-.bk-chip { border: 1px solid rgb(var(--c-bronze) / .5); border-radius: 999px; padding: .3rem .75rem; font-size: .75rem; font-weight: 600; color: rgb(var(--c-ink) / .75); background: transparent; }
+.bk-chip { border: 1px solid rgb(var(--c-bronze) / .5); border-radius: 999px; padding: .3rem .75rem; font-size: .75rem; font-weight: 600; color: var(--text-body-color); background: transparent; }
 .bk-chip.is-on { background: var(--bk-teal); border-color: var(--bk-teal); color: #fff; }
 .bk-cat-mobile { display: block; cursor: pointer; }
 .bk-cat-desktop { display: none; }
@@ -168,22 +168,23 @@
 .bk-service-card:has(input:checked) .bk-service-tick::after { content: "\2713"; font-weight: 700; }
 .bk-service-text { flex: 1; min-width: 0; }
 .bk-service-name { display: block; font-size: .875rem; font-weight: 600; color: rgb(var(--c-ink)); line-height: 1.25; }
-.bk-service-meta { display: block; font-size: .7rem; color: rgb(var(--c-ink) / .55); }
+.bk-service-meta { display: block; font-size: .7rem; color: var(--muted); }
 .bk-service-price { font-size: .875rem; font-weight: 700; color: rgb(var(--c-ink)); white-space: nowrap; }
 .bk-more { display: block; width: 100%; margin-top: .5rem; padding: .5rem; border-radius: .75rem; border: 1px dashed rgb(var(--c-bronze) / .6); font-size: .8rem; font-weight: 700; color: var(--bk-teal); background: transparent; }
 .bk-more.hidden { display: none; }
 
 /* Staff: green = available, red = busy (disabled), teal border + check = selected */
 #bookStaffList .bk-staff-card { padding: .75rem .625rem .625rem; font-size: .8rem; text-align: center; color: rgb(var(--c-ink)); display: flex; flex-direction: column; align-items: center; }
-#bookStaffList .bk-staff-card.is-available { border-color: rgb(21 128 61 / .45); cursor: pointer; }
-#bookStaffList .bk-staff-card.is-busy { border-color: rgb(190 18 60 / .35); background: #FFF1F2; color: rgb(159 18 57 / .8); cursor: not-allowed; opacity: .85; }
+#bookStaffList .bk-staff-card.is-available { border-color: rgb(17 92 57 / .45); cursor: pointer; }
+#bookStaffList .bk-staff-card.is-busy { border-color: rgb(156 30 21 / .35); background: var(--danger-soft); color: var(--danger); cursor: not-allowed; opacity: .85; }
 #bookStaffList .bk-staff-card.is-selected { border-color: var(--bk-teal); }
 .bk-staff-avatar { width: 2.25rem; height: 2.25rem; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .75rem; margin-bottom: .375rem; background: rgb(var(--c-bronze) / .2); color: rgb(var(--c-ink)); }
 .bk-staff-card.is-selected .bk-staff-avatar { background: var(--bk-teal); color: #fff; }
-.dark #bookStaffList .bk-staff-card.is-busy { background: rgb(190 18 60 / .12); color: #FDA4AF; }
+.dark #bookStaffList .bk-staff-card.is-busy { background: var(--danger-soft); color: var(--danger); }
 
-.bk-btn-back { border-radius: 999px; padding: .7rem 1.1rem; font-weight: 700; font-size: .9rem; color: rgb(var(--c-ink) / .7); border: 1px solid rgb(var(--c-ink) / .2); background: transparent; }
+.bk-btn-back { border-radius: 999px; padding: .7rem 1.1rem; font-weight: 700; font-size: .9rem; color: var(--text-body-color); border: 1px solid rgb(var(--c-ink) / .2); background: transparent; }
 .bk-btn-next { border-radius: 999px; padding: .7rem 1.6rem; font-weight: 700; font-size: .95rem; color: #fff; background: rgb(var(--c-plum)); }
 .bk-btn-next:hover { filter: brightness(1.1); }
-.dark .bk-btn-next { color: #0D1616; }
-.dark .bk-chip.is-on, .dark .bk-card-check, .dark .bk-staff-check { color: #0D1616; }
+.dark .bk-btn-next { background: var(--brand-dark); color: #FFFFFF; }
+.dark .bk-chip.is-on, .dark .bk-card-check, .dark .bk-staff-check, .dark .bk-staff-card.is-selected .bk-staff-avatar { color: var(--brand-deep); }
+.dark .bk-service-card:has(input:checked) .bk-service-tick { color: var(--brand-deep); }

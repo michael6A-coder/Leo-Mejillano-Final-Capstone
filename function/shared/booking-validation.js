@@ -91,7 +91,7 @@ window.BookingFormValidation = (() => {
     }
   });
   const style = document.createElement('style');
-  style.textContent = '.booking-field-error{color:#9f1239;background:#fff1f2;padding:.35rem .5rem;border-radius:.375rem;font-size: 1rem;line-height:1.5;margin:.35rem 0 .65rem}[data-booking-validated]:disabled{opacity:.6;cursor:not-allowed}[data-booking-validated]:read-only{opacity:.85}[data-booking-validated][aria-invalid="true"]{outline:2px solid #be123c;outline-offset:1px}';
+  style.textContent = '.booking-field-error{color:var(--danger);background:var(--danger-soft);padding:.35rem .5rem;border-radius:.375rem;font-size: 1rem;line-height:1.5;margin:.35rem 0 .65rem}[data-booking-validated]:disabled{opacity:.6;cursor:not-allowed}[data-booking-validated]:read-only{opacity:.85}[data-booking-validated][aria-invalid="true"]{outline:2px solid var(--danger);outline-offset:1px}';
   document.head.appendChild(style);
   function message(target, text) {
     if (!target) return;

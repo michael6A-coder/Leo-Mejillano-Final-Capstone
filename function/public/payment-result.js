@@ -31,9 +31,9 @@
 
   // Header icon: 'success' | 'failed' | 'pending' | 'loading'.
   const ICONS = {
-    success: ['bg-emerald-100 text-emerald-700', '<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>'],
-    failed: ['bg-rose-100 text-rose-700', '<path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/>'],
-    pending: ['bg-amber-100 text-amber-700', '<circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 2"/>'],
+    success: ['bg-emerald-100 text-[color:var(--success)]', '<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>'],
+    failed: ['bg-rose-100 text-[color:var(--danger)]', '<path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/>'],
+    pending: ['bg-amber-100 text-[color:var(--warn)]', '<circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 2"/>'],
     loading: ['bg-sand-200 text-ink/60', '<path stroke-linecap="round" d="M12 3a9 9 0 1 0 9 9"/>']
   };
   function setIcon(kind) {
@@ -141,7 +141,7 @@
     PendingPayment.forget();
     setIcon('success');
     detail('resultStatusRow', 'resultStatus', 'Paid');
-    el('resultStatus').className = 'font-bold text-emerald-700';
+    el('resultStatus').className = 'font-bold text-[color:var(--success)]';
     startRedirect(data);
     el('resultAmountLabel').textContent = 'Amount paid';
     el('resultAmount').textContent = peso(data.amountPaid);
@@ -224,7 +224,7 @@
     const failed = data.state === 'failed' || outcome === 'cancel';
     const statusText = data.status === 'Cancelled' ? 'Expired' : failed ? 'Failed' : outcome === 'choose' ? 'Awaiting payment' : 'Pending';
     detail('resultStatusRow', 'resultStatus', statusText);
-    el('resultStatus').className = 'font-bold ' + (statusText === 'Pending' || statusText === 'Awaiting payment' ? 'text-amber-700' : 'text-rose-700');
+    el('resultStatus').className = 'font-bold ' + (statusText === 'Pending' || statusText === 'Awaiting payment' ? 'text-[color:var(--warn)]' : 'text-[color:var(--danger)]');
     setIcon(statusText === 'Pending' || statusText === 'Awaiting payment' ? 'pending' : 'failed');
     if (data.type !== 'home_service' && data.status === 'Cancelled') {
       PendingPayment.forget();
@@ -275,7 +275,7 @@
     fetch('../../backend/public/paymongoStatus.php?ref=' + encodeURIComponent(ref) + '&token=' + encodeURIComponent(token))
       .then(r => r.json())
       .then(data => {
-        if (!data.success) { show('Payment link not found', data.message || 'Please check your booking reference.'); return; }
+        if (!data.success) { setIcon('failed'); show('Payment link not found', data.message || 'Please check your booking reference.'); return; }
         const pending = data.kind === 'balance' ? !data.paid : data.state === 'pending';
         if (pending && polls-- > 0) { pollTimer = setTimeout(() => check(after), 1000); return; }
         polls = 0;
@@ -287,7 +287,7 @@
       .catch(() => show('Something went wrong', 'We could not check your payment. Please refresh this page.'));
   }
 
-  if (!ref || !token) show('Payment link not found', 'This payment link is incomplete.');
+  if (!ref || !token) { setIcon('failed'); show('Payment link not found', 'This payment link is incomplete.'); }
   else if (outcome === 'pay' && LOGOS[params.get('method')]) startPayment(params.get('method'));
   else if (outcome === 'waiting') waitForResult();
   else check();

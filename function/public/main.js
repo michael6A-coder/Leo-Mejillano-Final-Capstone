@@ -751,7 +751,7 @@
     const button = (page, label, disabled = false, active = false) =>
       `<button type="button" data-svc-page="${page}" ${disabled ? 'disabled' : ''} ${active ? 'aria-current="page"' : ''}
         aria-label="${label === 'Previous' || label === 'Next' ? label + ' page' : 'Page ' + page}"
-        class="min-w-[40px] min-h-[40px] px-3 py-2 rounded-xl border text-xs font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-plum disabled:opacity-40 disabled:cursor-not-allowed ${active ? 'bg-plum text-white border-plum' : 'bg-panel text-plum border-bronze/40 hover:border-plum'}">${label}</button>`;
+        class="min-w-10 min-h-10 px-3 py-2 rounded-xl border text-xs font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-plum disabled:opacity-40 disabled:cursor-not-allowed ${active ? 'bg-plum text-white border-plum' : 'bg-panel text-plum border-bronze/40 hover:border-plum'}">${label}</button>`;
     const pages = [];
     for (let page = 1; page <= pageCount; page++) {
       if (page === 1 || page === pageCount || Math.abs(page - currentSvcPage) <= 1 || (currentSvcPage <= 2 && page <= 3) || (currentSvcPage >= pageCount - 1 && page >= pageCount - 2)) pages.push(page);
@@ -2072,7 +2072,7 @@
               '<p class="text-ink/60 text-[13px] mt-1">Paid ' + peso(res.amountPaid) + ' of ' + peso(res.quote) + '.' + (res.balancePayUrl ? '' : ' Pay in cash on the event day, or ask us for an online payment link.') + '</p>' +
               (res.balancePayUrl ? '<a href="' + escAttr(res.balancePayUrl) + '" class="mt-3 inline-flex w-full justify-center rounded-full bg-plum hover:bg-plum/85 text-white font-bold py-3 transition">Pay ' + peso(res.balanceDue) + ' now GCash, Maya or card</a>' : '') +
             '</div>'
-          : '<div class="mt-5 rounded-2xl bg-[#DCFCE7] border border-[#86EFAC] p-4 text-sm font-bold text-[#166534]">Fully paid ✓ thank you!</div>')
+          : '<div class="mt-5 rounded-2xl bg-[color:var(--success-soft)] border border-[color:var(--success-soft)] p-4 text-sm font-bold text-[color:var(--success)]">Fully paid ✓ thank you!</div>')
         : '') +
       // Home service online reschedule (backend/public/rescheduleHomeService.php).
       (isHome ? renderHomeServiceReschedule(res) : '');
@@ -2113,7 +2113,7 @@
     const msg = box.querySelector('.hs-resched-msg');
     const date = box.querySelector('.hs-resched-date').value;
     const time = box.querySelector('.hs-resched-time').value;
-    const say = (text, ok) => { msg.textContent = text; msg.className = 'hs-resched-msg mt-2 text-[12px] font-semibold ' + (ok ? 'text-[#15803D]' : 'text-copper-dark'); };
+    const say = (text, ok) => { msg.textContent = text; msg.className = 'hs-resched-msg mt-2 text-[12px] font-semibold ' + (ok ? 'text-[color:var(--success)]' : 'text-copper-dark'); };
     if (!date || !time) { say('Please choose a new date and time.', false); return; }
     btn.disabled = true;
     const body = new FormData();
@@ -2358,8 +2358,8 @@
                     '<span class="bk-staff-avatar" aria-hidden="true">' + escAttr(getStaffInitials(s.name)) + '</span>' +
                     '<span class="block font-semibold">' + escAttr(s.name) + '</span>' +
                     '<span class="block text-[11px] opacity-70">' + escAttr(s.role || 'Stylist') + '</span>' +
-                    '<span class="mt-1 inline-flex items-center gap-1 text-[10px] font-bold ' + (s.available ? 'text-[#15803D]' : 'text-[#9F1239]') + '">' +
-                      '<span class="w-1.5 h-1.5 rounded-full ' + (s.available ? 'bg-[#16A34A]' : 'bg-[#E11D48]') + '"></span>' +
+                    '<span class="mt-1 inline-flex items-center gap-1 text-[10px] font-bold ' + (s.available ? 'text-[color:var(--success)]' : 'text-[color:var(--danger)]') + '">' +
+                      '<span class="w-1.5 h-1.5 rounded-full ' + (s.available ? 'bg-[color:var(--success)]' : 'bg-[color:var(--danger)]') + '"></span>' +
                       (s.available ? 'Available' : s.busyUntil ? 'Busy until ' + escAttr(s.busyUntil) : (s.currentShift === 'On Break' ? 'On break' : 'Off duty')) +
                     '</span>' +
                   '</button>').join('') + '</div>'

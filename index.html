@@ -2,6 +2,7 @@
 <html lang="en" class="scroll-smooth">
 
 <head>
+  <link rel="stylesheet" href="frontend/shared/theme-tokens.css">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
   <title>Leo Mejillano Salon & Beauty, Official Web Portal</title>
@@ -49,9 +50,11 @@
   <!-- Clean theme: loaded last so it overrides older theme colours. -->
   <link rel="stylesheet" href="frontend/shared/clean-theme.css?v=20261105-booking">
   <link rel="stylesheet" href="frontend/public/booking-modal.css?v=20261110b">
+  <link rel="stylesheet" href="frontend/public/public-unify.css?v=20261110d">
+  <link rel="stylesheet" href="frontend/shared/type-scale.css?v=20261110-size">
 </head>
 
-<body class="bg-sand-100 text-ink font-body antialiased">
+<body class="gw-site bg-sand-100 text-ink font-body antialiased">
   <div id="scroll-progress-bar"
     class="fixed top-0 left-0 h-0.75 bg-linear-to-r from-copper-dark via-copper to-plum z-60" style="width: 0%">
   </div>
@@ -305,7 +308,7 @@
           <p id="bkStaffPending" class="rounded-xl border border-bronze/50 bg-sand-100 p-3 text-xs text-ink/50">Choose a date and time first to see who is available.</p>
           <div id="bookStaffSection" class="hidden">
             <p id="bookStaffLabel" class="bk-visually-hidden block text-sm font-bold tracking-wide uppercase text-ink/75 mb-1">Select staff</p>
-            <p class="prose-justify text-xs text-ink/60 mb-2">Pick a stylist for each service. <span class="text-[#15803D] font-semibold">Available</span> stylists are free for that service; <span class="text-[#9F1239] font-semibold">Busy</span> ones are still with another client.</p>
+            <p class="prose-justify text-xs text-ink/60 mb-2">Pick a stylist for each service. <span class="text-[color:var(--success)] font-semibold">Available</span> stylists are free for that service; <span class="text-[color:var(--danger)] font-semibold">Busy</span> ones are still with another client.</p>
             <div id="bookStaffList" role="group" aria-labelledby="bookStaffLabel" class="rounded-xl border border-bronze/50 bg-sand-100 p-3 text-xs text-ink/50">
               Choose your branch, services, date, and time to see available staff.
             </div>
@@ -847,7 +850,7 @@
 
           <div class="relative hero-visual rounded-4xl p-2 sm:p-3">
             <div
-              class="aspect-[4/4.8] rounded-[26px] overflow-hidden shadow-[0_30px_80px_-28px_rgba(0,109,111,.48)] relative border border-white/70">
+              class="aspect-[4/4.8] rounded-[26px] overflow-hidden shadow-[0_30px_80px_-28px_rgba(22,96,75,.48)] relative border border-white/70">
               <img
                 src="frontend/shared/image/Salon-BG-2.png"
                 alt="Leo Mejillano Salon interior" class="w-full h-full object-cover" />
@@ -930,7 +933,7 @@
           <div class="grid lg:grid-cols-[.92fr_1.08fr] gap-10 lg:gap-16 items-center">
             <div class="sr relative">
               <div
-                class="rounded-[28px] overflow-hidden border border-bronze/30 shadow-[0_28px_70px_-40px_rgba(34,34,34,.65)]">
+                class="rounded-[28px] overflow-hidden border border-bronze/30 shadow-[0_28px_70px_-40px_rgba(24,38,31,.65)]">
                 <img
                   src="frontend/shared/image/Salon-BG.png"
                   alt="Stylists working on the salon floor" class="w-full h-full object-cover aspect-[4/4.6]" />
@@ -1363,7 +1366,7 @@
         <div class="absolute inset-0 opacity-5 pointer-events-none" aria-hidden="true" style="
               background-image: radial-gradient(
                 circle at 1px 1px,
-                #222 1px,
+                var(--text) 1px,
                 transparent 0
               );
               background-size: 24px 24px;
@@ -1454,7 +1457,7 @@
           </div>
 
           <dialog id="servicesPopup" aria-labelledby="servicesPopupTitle"
-            class="p-0 w-[calc(100%_-_2rem)] max-w-4xl max-h-[90dvh] overflow-y-auto rounded-3xl bg-sand-100 text-ink border border-bronze/40 shadow-2xl backdrop:bg-ink/50">
+            class="p-0 w-[calc(100%-2rem)] max-w-4xl max-h-[90dvh] overflow-y-auto rounded-3xl bg-sand-100 text-ink border border-bronze/40 shadow-2xl backdrop:bg-ink/50">
             <div class="sticky top-0 z-10 flex items-center justify-between gap-4 px-5 sm:px-8 py-4 bg-sand-100 border-b border-bronze/20">
               <div>
                 <h3 id="servicesPopupTitle" class="font-display text-xl sm:text-2xl">Services &amp; Pricing</h3>
@@ -2332,7 +2335,7 @@
 
           <!-- How to reschedule + important rules -->
           <div class="mt-8 grid md:grid-cols-2 gap-5">
-            <div class="bg-sand-100 border border-bronze/25 rounded-[24px] p-6">
+            <div class="bg-sand-100 border border-bronze/25 rounded-3xl p-6">
               <span class="text-xs font-bold tracking-widest uppercase text-copper">How to reschedule</span>
               <ol class="mt-3 space-y-2.5 text-xs text-ink/75 leading-relaxed list-decimal list-inside">
                 <li class="prose-justify">Enter your <b>booking reference</b> (e.g. LM-HOM-2026-000041) and the <b>email</b> you used, then tap <b>Track Request</b>.</li>
@@ -2342,7 +2345,7 @@
               </ol>
               <p class="mt-3 text-xs text-ink/55">Have an account? You can also reschedule from <b>My Account → Home Service</b>.</p>
             </div>
-            <div class="bg-copper/10 border border-copper/30 rounded-[24px] p-6">
+            <div class="bg-copper/10 border border-copper/30 rounded-3xl p-6">
               <span class="text-xs font-bold tracking-widest uppercase text-copper-dark">Important reminders &amp; rules</span>
               <ul class="mt-3 space-y-2.5 text-xs text-ink/75 leading-relaxed">
                 <li class="flex gap-2"><span class="text-copper-dark font-bold">•</span><span>Reschedule online at least <b>3 days (72 hours)</b> before your event. Closer than that, please call <b>0918 536 8016</b>.</span></li>

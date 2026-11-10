@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="stylesheet" href="../shared/theme-tokens.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Customers · Leo Mejillano Admin</title>
@@ -11,9 +12,11 @@
   <script src="../../function/admin/theme-config.js"></script>
   <script>tailwind.config.corePlugins = { preflight: false };</script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  <link rel="stylesheet" href="admin-panel.css?v=20261110">
+  <link rel="stylesheet" href="admin-panel.css?v=20261110c">
+  <link rel="stylesheet" href="../shared/portal-unify.css?v=20261110b">
   <script src="../../function/shared/toast.js"></script>
   <script src="../../function/shared/portal-presentation.js"></script>
+  <link rel="stylesheet" href="../shared/type-scale.css?v=20261110-size">
 </head>
 <body class="lm-admin" x-data="adminCustomersApp()" x-init="init()" x-effect="AdminUI.lockScroll(openHistoryModalFlag)">
 <div class="lm-shell">
@@ -104,7 +107,7 @@
   </div>
 </div>
 
-<script src="../../function/admin/admin-shell.js?v=20261110"></script>
+<script src="../../function/admin/admin-shell.js?v=20261110c"></script>
 <script src="../../function/shared/live-sync.js?v=20261110"></script>
 <script src="../../function/admin/shared-data.js?v=20261110"></script>
 <script src="../../function/admin/customers.js?v=20261110"></script>

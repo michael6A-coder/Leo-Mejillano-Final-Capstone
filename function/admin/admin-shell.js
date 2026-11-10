@@ -1,6 +1,9 @@
-/* Admin Panel shell: builds the same sidebar, mobile drawer, menu button and
-   notification bell on every frontend/admin/*.html page, so the nine panels
-   never drift apart. Must be a plain (non-deferred) script placed after the
+/* Admin Panel shell: builds the same sidebar, header, page heading, phone
+   bottom navigation, Menu drawer and notification bell on every
+   frontend/admin/*.html page, so the nine panels never drift apart. Layout
+   follows the Customer Portal (function/customer/customer-shell.js):
+   >= 1024px sidebar + header with an "ADMIN PORTAL / Page" breadcrumb;
+   <  1024px brand header + bottom bar (first four sections + Menu drawer). Must be a plain (non-deferred) script placed after the
    page markup and before Alpine starts -- the injected markup carries Alpine
    bindings to $store.admin (function/admin/shared-data.js). */
 (function () {
@@ -29,49 +32,71 @@
     ['feedback.html', 'Guest Feedback', 'feedback'],
     ['settings.html', 'Settings', 'settings']
   ];
+  const BOTTOM_COUNT = 4; // phone bottom bar: first four sections + Menu (rest live in the drawer)
+  const LOGOUT_URL = '../../backend/auth/logout.php?portal=admin';
   const icon = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
   const current = location.pathname.split('/').pop() || 'dashboard.html';
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+  /* ---------- Sidebar (desktop) / Menu drawer (below 1024px) ---------- */
   const sidebar = document.querySelector('[data-lm-sidebar]');
   if (sidebar) {
     sidebar.id = 'lm-sidebar';
     sidebar.setAttribute('aria-label', 'Admin navigation');
     sidebar.innerHTML = `
+      <button type="button" class="lm-close lm-sidebar-close" data-lm-close aria-label="Close menu">&times;</button>
       <div class="lm-brand">
         <div class="lm-brand-mark" aria-hidden="true">LM</div>
         <div><p class="lm-brand-name">Leo Mejillano</p><p class="lm-brand-sub">Admin Panel</p></div>
-        <button type="button" class="lm-close lm-sidebar-close" data-lm-close aria-label="Close menu">&times;</button>
       </div>
-      <nav class="lm-nav" aria-label="Admin sections">
-        <span class="lm-nav-label">Manage</span>
+      <p class="lm-side-heading" id="lm-side-heading">ADMIN NAVIGATION</p>
+      <nav class="lm-nav" aria-labelledby="lm-side-heading">
         ${NAV.map(([href, label, ic]) => `<a href="${href}" data-nav-page="${href}"${href === current ? ' aria-current="page"' : ''}>${icon(ic)}<span>${label}</span></a>`).join('')}
       </nav>
       <div class="lm-sidebar-foot">
-        <div class="lm-account">
-          <div class="lm-account-avatar" aria-hidden="true" x-text="AdminUI.initials($store.admin.adminProfile.name || 'Admin')">A</div>
-          <div style="min-width:0"><p class="lm-account-name" x-text="$store.admin.adminProfile.name || 'Administrator'">Administrator</p><p class="lm-account-role">Platform Administrator</p></div>
-        </div>
-        <a class="lm-signout" href="../../backend/auth/logout.php?portal=admin">${icon('signout')}<span>Sign out</span></a>
+        <p class="lm-side-heading lm-side-heading-sm">ADMIN ACCESS</p>
+        <a class="lm-signout" href="${LOGOUT_URL}">${icon('signout')}<span>Sign out</span></a>
       </div>`;
   }
 
+  /* ---------- Header + page heading ---------- */
   const topbar = document.querySelector('[data-lm-topbar]');
+  let menu = null;
   if (topbar) {
-    const menu = document.createElement('button');
-    menu.type = 'button';
-    menu.className = 'lm-btn lm-btn--icon lm-menu-btn';
-    menu.setAttribute('aria-controls', 'lm-sidebar');
-    menu.setAttribute('aria-expanded', 'false');
-    menu.setAttribute('aria-label', 'Open menu');
-    menu.innerHTML = icon('menu');
-    topbar.insertBefore(menu, topbar.firstChild);
+    // The page's title, description and controls (branch pickers, Export,
+    // Add buttons) move -- with their Alpine bindings -- into a page heading
+    // at the top of the content, as on Customer Portal pages.
+    const titleBox = topbar.querySelector('.lm-topbar-title');
+    const pageActions = topbar.querySelector('.lm-topbar-actions');
+    const h1 = titleBox && titleBox.querySelector('h1');
+    const titleText = h1 ? h1.textContent.trim() : '';
+    const content = document.querySelector('.lm-content');
+    if (content && titleBox) {
+      const intro = document.createElement('div');
+      intro.className = 'lm-intro';
+      titleBox.className = 'lm-intro-copy';
+      titleBox.insertAdjacentHTML('afterbegin', '<span class="lm-eyebrow">Admin Portal</span>');
+      intro.appendChild(titleBox);
+      if (pageActions && pageActions.children.length) { pageActions.className = 'lm-intro-actions'; intro.appendChild(pageActions); }
+      else if (pageActions) pageActions.remove();
+      content.insertBefore(intro, content.firstChild);
+    }
+
+    topbar.classList.add('lm-header');
+    topbar.innerHTML = `
+      <a href="dashboard.html" class="lm-header-brand" aria-label="Leo Mejillano Admin Portal, Dashboard">
+        <span class="lm-brand-mark" aria-hidden="true">LM</span><span class="lm-header-brand-name">LEO MEJILLANO</span>
+      </a>
+      <p class="lm-header-title"><span>ADMIN PORTAL</span><b aria-hidden="true">/</b><strong>${esc(titleText)}</strong></p>
+      <div class="lm-header-actions"></div>`;
+    const actions = topbar.querySelector('.lm-header-actions');
 
     const bell = document.createElement('div');
     bell.className = 'lm-bell';
     bell.setAttribute('x-data', '{ open: false }');
     bell.setAttribute('@keydown.escape', 'open = false');
     bell.innerHTML = `
-      <button type="button" class="lm-btn lm-btn--icon" @click="open = !open" :aria-expanded="open.toString()" aria-label="Notifications">${icon('bell')}
+      <button type="button" class="lm-btn lm-btn--icon" @click="open = !open" :aria-expanded="open.toString()" :aria-label="$store.admin.unreadNotifications() > 0 ? 'Notifications, ' + $store.admin.unreadNotifications() + ' unread' : 'Notifications'">${icon('bell')}
         <span class="lm-bell-dot" x-show="$store.admin.unreadNotifications() > 0" x-cloak></span></button>
       <div class="lm-bell-panel" x-show="open" @click.outside="open = false" x-cloak role="region" aria-label="Admin notifications">
         <div class="lm-bell-head"><strong>Notifications</strong>
@@ -89,31 +114,53 @@
         </div>
         <p class="lm-alert lm-alert--error" style="margin:10px" role="alert" x-show="$store.admin.notificationReadError" x-text="$store.admin.notificationReadError"></p>
       </div>`;
-    topbar.appendChild(bell);
+    actions.appendChild(bell);
+    // Phones/tablets only: on desktop Sign out lives in the sidebar.
+    actions.insertAdjacentHTML('beforeend',
+      `<a class="lm-btn lm-btn--icon lm-header-signout" href="${LOGOUT_URL}" aria-label="Sign out" title="Sign out">${icon('signout')}</a>` +
+      `<a class="lm-profile-link" href="settings.html" aria-label="Open account settings">
+         <span class="lm-account-avatar" aria-hidden="true" x-text="AdminUI.initials($store.admin.adminProfile.name || 'Admin')">A</span>
+         <span class="lm-profile-text"><strong x-text="$store.admin.adminProfile.name || 'Administrator'">Administrator</strong><small>Platform Administrator</small></span>
+       </a>`);
 
-    // Drawer (below 1024px). The sidebar is permanent on wider screens.
+    /* ---------- Bottom navigation (below 1024px) ---------- */
+    const shown = NAV.slice(0, BOTTOM_COUNT);
+    const inMenu = !shown.some(([href]) => href === current);
+    const bottom = document.createElement('nav');
+    bottom.id = 'lm-bottom-nav';
+    bottom.className = 'lm-bottom-nav';
+    bottom.setAttribute('aria-label', 'Admin quick navigation');
+    bottom.innerHTML = shown.map(([href, label, ic]) =>
+      `<a href="${href}" class="lm-bottom-link${href === current ? ' is-active' : ''}"${href === current ? ' aria-current="page"' : ''}>${icon(ic)}<span>${label}</span></a>`).join('') +
+      `<button type="button" class="lm-bottom-link${inMenu ? ' is-active' : ''}" data-lm-menu aria-controls="lm-sidebar" aria-expanded="false">${icon('menu')}<span>Menu</span></button>`;
+    document.body.appendChild(bottom);
+    menu = bottom.querySelector('[data-lm-menu]');
+  }
+
+  /* ---------- Menu drawer (below 1024px) ---------- */
+  if (menu && sidebar) {
     const backdrop = document.createElement('div');
     backdrop.className = 'lm-backdrop';
     document.body.appendChild(backdrop);
     const narrow = window.matchMedia('(max-width: 1023.98px)');
-    const setOpen = (open) => {
+    const isOpen = () => document.body.classList.contains('lm-nav-open');
+    const setOpen = (open, restoreFocus) => {
       document.body.classList.toggle('lm-nav-open', open);
       menu.setAttribute('aria-expanded', String(open));
-      if (sidebar) sidebar.inert = narrow.matches && !open;
-      if (open && sidebar) (sidebar.querySelector('[aria-current="page"]') || sidebar.querySelector('a')).focus({ preventScroll: true });
+      sidebar.inert = narrow.matches && !open;
+      if (open) sidebar.querySelector('[data-lm-close]').focus({ preventScroll: true });
+      else if (restoreFocus) menu.focus({ preventScroll: true });
     };
     setOpen(false);
     (narrow.addEventListener ? narrow.addEventListener('change', () => setOpen(false)) : narrow.addListener(() => setOpen(false)));
-    menu.addEventListener('click', () => setOpen(true));
-    backdrop.addEventListener('click', () => { setOpen(false); menu.focus(); });
-    if (sidebar) {
-      sidebar.addEventListener('click', (e) => {
-        if (e.target.closest('[data-lm-close]')) { setOpen(false); menu.focus(); }
-        else if (narrow.matches && e.target.closest('a[href]')) setOpen(false);
-      });
-    }
+    menu.addEventListener('click', () => setOpen(!isOpen(), true));
+    backdrop.addEventListener('click', () => setOpen(false, true));
+    sidebar.addEventListener('click', (e) => {
+      if (e.target.closest('[data-lm-close]')) setOpen(false, true);
+      else if (narrow.matches && e.target.closest('a[href]')) setOpen(false);
+    });
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && document.body.classList.contains('lm-nav-open')) { setOpen(false); menu.focus(); }
+      if (e.key === 'Escape' && isOpen()) setOpen(false, true);
     });
   }
 })();
